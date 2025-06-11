@@ -1,0 +1,153 @@
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .all-\[unset\] {
+    all: unset;
+  }
+}
+
+:root {
+  --alto: rgba(212, 212, 212, 1);
+  --bianca: rgba(254, 254, 251, 1);
+  --dove-gray: rgba(102, 102, 102, 1);
+  --iron: rgba(218, 220, 224, 1);
+  --karry: rgba(255, 232, 207, 1);
+  --oasis: rgba(254, 231, 205, 1);
+  --orient: rgba(0, 104, 120, 1);
+  --outfit-medium-font-family: "Outfit", Helvetica;
+  --outfit-medium-font-size: 14px;
+  --outfit-medium-font-style: normal;
+  --outfit-medium-font-weight: 500;
+  --outfit-medium-letter-spacing: 0px;
+  --outfit-medium-line-height: 21px;
+  --outfit-regular-font-family: "Outfit", Helvetica;
+  --outfit-regular-font-size: 16px;
+  --outfit-regular-font-style: normal;
+  --outfit-regular-font-weight: 400;
+  --outfit-regular-letter-spacing: 0px;
+  --outfit-regular-line-height: 25.600000381469727px;
+  --outfit-semibold-font-family: "Outfit", Helvetica;
+  --outfit-semibold-font-size: 16px;
+  --outfit-semibold-font-style: normal;
+  --outfit-semibold-font-weight: 600;
+  --outfit-semibold-letter-spacing: 0px;
+  --outfit-semibold-line-height: 16px;
+  --semantic-emphasis-font-family: "PT Serif", Helvetica;
+  --semantic-emphasis-font-size: 28px;
+  --semantic-emphasis-font-style: italic;
+  --semantic-emphasis-font-weight: 700;
+  --semantic-emphasis-letter-spacing: 0px;
+  --semantic-emphasis-line-height: 33.599998474121094px;
+  --semantic-heading-1-font-family: "Public Sans", Helvetica;
+  --semantic-heading-1-font-size: 38px;
+  --semantic-heading-1-font-style: normal;
+  --semantic-heading-1-font-weight: 100;
+  --semantic-heading-1-letter-spacing: 0px;
+  --semantic-heading-1-line-height: 45.599998474121094px;
+  --semantic-heading-2-font-family: "Outfit", Helvetica;
+  --semantic-heading-2-font-size: 24px;
+  --semantic-heading-2-font-style: normal;
+  --semantic-heading-2-font-weight: 700;
+  --semantic-heading-2-letter-spacing: 0px;
+  --semantic-heading-2-line-height: 28.799999237060547px;
+  --semantic-heading-3-font-family: "Outfit", Helvetica;
+  --semantic-heading-3-font-size: 20px;
+  --semantic-heading-3-font-style: normal;
+  --semantic-heading-3-font-weight: 600;
+  --semantic-heading-3-letter-spacing: -0.5px;
+  --semantic-heading-3-line-height: 28px;
+  --semantic-link-font-family: "Outfit", Helvetica;
+  --semantic-link-font-size: 14px;
+  --semantic-link-font-style: normal;
+  --semantic-link-font-weight: 600;
+  --semantic-link-letter-spacing: 0px;
+  --semantic-link-line-height: 16.799999237060547px;
+  --texas-rose: rgba(255, 178, 92, 1);
+  --tundora: rgba(77, 77, 77, 1);
+  --white: rgba(255, 255, 255, 1);
+  --white-bianca: rgba(255, 255, 255, 1);
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+
+    --card: transparent;
+    --card-foreground: 222.2 47.4% 11.2%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 215 20.2% 65.1%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
+
+    --accent: 216 34% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --popover: 224 71% 4%;
+    --popover-foreground: 215 20.2% 65.1%;
+
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+
+    --card: transparent;
+    --card-foreground: 213 31% 91%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 1.2%;
+
+    --secondary: 222.2 47.4% 11.2%;
+    --secondary-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 216 34% 17%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
