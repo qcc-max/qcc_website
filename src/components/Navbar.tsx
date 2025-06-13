@@ -207,7 +207,7 @@ export const Navbar = () => {
 
       {/* Mobile Navigation - Enhanced with aesthetic matching contact card */}
       <div
-        className={`fixed inset-0 bg-gradient-to-br from-white to-gray-50/98 backdrop-blur-lg z-50 transform transition-all duration-300 ease-in-out ${
+        className={`fixed inset-0 bg-from-white to-gray-50/98 backdrop-blur-lg z-50 transform transition-all duration-300 ease-in-out ${
           isMobileMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
         }`}
       >
@@ -247,7 +247,7 @@ export const Navbar = () => {
           {/* Mobile menu items with improved aesthetic to match contact card */}
           <div className="flex flex-col justify-center flex-grow px-4 sm:px-6 py-8">
             <div>
-              <div className="bg-white rounded-[28px] p-4 sm:p-6 border border-blue-200">
+              <div className="bg-stone-100 rounded-[28px] p-4 sm:p-6 border border-blue-200">
                 {navItems.map((item, index) => (
                   <div key={item.id} className="mb-1.5 last:mb-0">
                     <button
@@ -274,7 +274,7 @@ export const Navbar = () => {
           </div>
           
           {/* Mobile footer CTA with gradient matching contact card */}
-          <div className="p-4 sm:p-6 border-t border-blue-100 bg-white relative z-10">
+          <div className="p-4 sm:p-6 border-t border-blue-100 bg-stone-100 relative z-10">
             <Button
               onClick={() => {
                 navigate('/book');
