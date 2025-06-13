@@ -179,7 +179,7 @@ export default function TestimonialsCard() {
         <div className="text-center mb-16">
           <div className="relative inline-block">
             <h2 className="text-4xl md:text-5xl font-light text-gray-800 relative inline-block tracking-tight">
-              our<span className="font-['PT_Serif',serif] italic font-semibold bg-gradient-to-r from-blue-700 via-blue-600 to-blue-500 bg-clip-text text-transparent ml-3">testimonials</span>
+              student<span className="font-['PT_Serif',serif] italic font-semibold bg-gradient-to-r from-blue-700 via-blue-600 to-blue-500 bg-clip-text text-transparent ml-3">testimonials</span>
             </h2>
             
             {/* Animated star */}

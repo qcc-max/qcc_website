@@ -186,7 +186,7 @@ export const HeroCard = () => {
           }}
         />
       ))}
-
+ <br></br>
       <div className="max-w-7xl mx-auto flex flex-col items-center text-center relative z-10 px-4">
         <motion.div
           className="mb-6"

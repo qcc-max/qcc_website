@@ -71,7 +71,7 @@ export default function ServicesCard() {
      id: 1,
      title: "Application Strategy",
      icon: FileText,
-     description: "We develop comprehensive strategies to make your application stand out. Our experts create personalized roadmaps tailored to your academic strengths, extracurricular achievements, and career aspirations.",
+     description: "We don’t believe in one-size-fits-all. Our team works closely with you to understand your story, strengths, and dreams. Then we build a step-by-step plan that brings your college goals into focus—helping you apply with purpose, clarity, and confidence.",
      color: "blue",
      features: ["Personalized Assessment", "Strategic Roadmap", "Timeline Planning", "Goal Setting"]
    },
@@ -79,23 +79,23 @@ export default function ServicesCard() {
      id: 2,
      title: "Essay Crafting",
      icon: Edit,
-     description: "Our mentors from top universities guide you through the art of crafting compelling narratives that captivate admission officers. We help you identify your unique stories and refine your writing style.",
+     description: "Your experiences deserve to be heard and remembered. College essays aren’t just about writing well; they’re about sharing who you are in a way that feels real, meaningful, and unforgettable. We help you find the right story, structure it with purpose, and refine it until every word feels like you.",
      color: "amber",
      features: ["Story Development", "Writing Refinement", "Multiple Drafts", "Expert Review"]
    },
    {
      id: 3,
-     title: "Interview Preparation",
+     title: "Profile Building",
      icon: Users,
-     description: "Master the art of impressive interviews with our comprehensive preparation program. We conduct mock interviews tailored to your target schools' specific formats and questions.",
+     description: "Admissions committees look beyond grades—they want to see who you are outside the classroom. We help you shape a profile that reflects your passions, impact, and potential. Whether you’re just getting started or refining years of activities, we’ll guide you in building a story that feels meaningful and strategic.",
      color: "blue",
-     features: ["Mock Interviews", "Confidence Building", "Body Language", "Question Practice"]
+     features: ["Activity Planning", "Leadership Development", "Achievement Mapping", "Personal Branding "]
    },
    {
      id: 4,
      title: "Academic Excellence",
      icon: Award,
-     description: "Achieve your highest potential with our personalized academic support and test preparation strategies. Our expert tutors develop customized study plans targeting your specific areas for improvement.",
+     description: "Whether you're aiming to raise your GPA or master a tough subject, we match you with expert tutors who break down complex ideas into clear steps. We also help you build smarter study habits that work for your schedule and goals.",
      color: "amber",
      features: ["Test Preparation", "Study Plans", "Progress Tracking", "Subject Mastery"]
    },
@@ -103,7 +103,7 @@ export default function ServicesCard() {
      id: 5,
      title: "Portfolio Development",
      icon: Briefcase,
-     description: "Stand out with a thoughtfully curated portfolio of meaningful activities. We help you identify and develop extracurricular pursuits that align with your academic interests.",
+     description: "If you’re applying for programs in art, design, research, or innovation, we help you showcase your best work in a way that’s thoughtful, powerful, and true to you. From idea curation to final presentation, your portfolio will reflect who you are.",
      color: "blue",
      features: ["Activity Curation", "Skills Showcase", "Project Guidance", "Achievement Documentation"]
    },
@@ -111,7 +111,7 @@ export default function ServicesCard() {
      id: 6,
      title: "International Access",
      icon: Globe,
-     description: "Navigate the complex landscape of international university admissions with our specialized guidance. We provide insights into country-specific application requirements and visa processes.",
+     description: "Studying abroad is exciting—but also overwhelming. We make it easier. Whether you’re applying from outside the U.S., U.K., or Canada, or targeting global programs, we’ll help you understand requirements, adapt your applications, and feel supported at every step.",
      color: "amber",
      features: ["Visa Guidance", "Country Requirements", "Document Support", "Cultural Preparation"]
    },
@@ -119,7 +119,7 @@ export default function ServicesCard() {
      id: 7,
      title: "Career Planning",
      icon: Lightbulb,
-     description: "Discover the academic path that aligns with your strengths and aspirations. Our mentors help you explore various disciplines and understand career trajectories.",
+     description: "College is just the beginning. We help you think beyond your major—exploring future careers based on what excites you, what you're good at, and where you want to grow. You'll come away with direction, not just a degree plan.",
      color: "blue",
      features: ["Path Exploration", "Career Mapping", "Industry Insights", "Future Planning"]
    },
