@@ -1,625 +1,482 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
 import {
- FileText,
- Edit,
- Award,
- Users,
- Globe,
- Lightbulb,
- PenTool,
- Star,
- BookMarked,
- Briefcase,
+  FileText,
+  Edit,
+  Award,
+  Users,
+  Globe,
+  Lightbulb,
+  PenTool,
+  Star,
+  BookMarked,
+  Briefcase,
+  ArrowRight,
+  Check,
 } from 'lucide-react';
 
+export default function ServicesCard() {
+  const [activeService, setActiveService] = useState(1);
+  const [hoveredService, setHoveredService] = useState<number | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const sectionRef = useRef<HTMLElement | null>(null);
 
-export const ServicesCard = () => {
- const [activeService, setActiveService] = useState(1);
- const [hoveredService, setHoveredService] = useState<number | null>(null);
- const [screenSize, setScreenSize] = useState('desktop');
- const [isVisible, setIsVisible] = useState(false);
- const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
- const sectionRef = useRef<HTMLElement | null>(null);
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    if (sectionRef.current) {
+      const rect = sectionRef.current.getBoundingClientRect();
+      setMousePosition({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+    }
+  };
 
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 200);
 
- // Enhanced mouse movement for spotlight effect
- const handleMouseMove = (e: React.MouseEvent) => {
-   if (sectionRef.current) {
-     const rect = sectionRef.current.getBoundingClientRect();
-     setMousePosition({
-       x: e.clientX - rect.left,
-       y: e.clientY - rect.top
-     });
-   }
- };
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
 
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
 
- // Enhanced responsive detection
- useEffect(() => {
-   const updateScreenSize = () => {
-     const width = window.innerWidth;
-     if (width < 640) {
-       setScreenSize('mobile');
-     } else if (width < 768) {
-       setScreenSize('sm');
-     } else if (width < 1024) {
-       setScreenSize('tablet');
-     } else if (width < 1280) {
-       setScreenSize('laptop');
-     } else {
-       setScreenSize('desktop');
-     }
-   };
+    return () => {
+      clearTimeout(timer);
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
 
+  const services = [
+    {
+      id: 1,
+      title: "Application Strategy",
+      icon: FileText,
+      description: "We develop comprehensive strategies to make your application stand out. Our experts create personalized roadmaps tailored to your academic strengths, extracurricular achievements, and career aspirations.",
+      color: "blue",
+      features: ["Personalized Assessment", "Strategic Roadmap", "Timeline Planning", "Goal Setting"]
+    },
+    {
+      id: 2,
+      title: "Essay Crafting",
+      icon: Edit,
+      description: "Our mentors from top universities guide you through the art of crafting compelling narratives that captivate admission officers. We help you identify your unique stories and refine your writing style.",
+      color: "amber",
+      features: ["Story Development", "Writing Refinement", "Multiple Drafts", "Expert Review"]
+    },
+    {
+      id: 3,
+      title: "Interview Preparation",
+      icon: Users,
+      description: "Master the art of impressive interviews with our comprehensive preparation program. We conduct mock interviews tailored to your target schools' specific formats and questions.",
+      color: "blue",
+      features: ["Mock Interviews", "Confidence Building", "Body Language", "Question Practice"]
+    },
+    {
+      id: 4,
+      title: "Academic Excellence",
+      icon: Award,
+      description: "Achieve your highest potential with our personalized academic support and test preparation strategies. Our expert tutors develop customized study plans targeting your specific areas for improvement.",
+      color: "amber",
+      features: ["Test Preparation", "Study Plans", "Progress Tracking", "Subject Mastery"]
+    },
+    {
+      id: 5,
+      title: "Portfolio Development",
+      icon: Briefcase,
+      description: "Stand out with a thoughtfully curated portfolio of meaningful activities. We help you identify and develop extracurricular pursuits that align with your academic interests.",
+      color: "blue",
+      features: ["Activity Curation", "Skills Showcase", "Project Guidance", "Achievement Documentation"]
+    },
+    {
+      id: 6,
+      title: "International Access",
+      icon: Globe,
+      description: "Navigate the complex landscape of international university admissions with our specialized guidance. We provide insights into country-specific application requirements and visa processes.",
+      color: "amber",
+      features: ["Visa Guidance", "Country Requirements", "Document Support", "Cultural Preparation"]
+    },
+    {
+      id: 7,
+      title: "Career Planning",
+      icon: Lightbulb,
+      description: "Discover the academic path that aligns with your strengths and aspirations. Our mentors help you explore various disciplines and understand career trajectories.",
+      color: "blue",
+      features: ["Path Exploration", "Career Mapping", "Industry Insights", "Future Planning"]
+    },
+  ];
 
-   updateScreenSize();
-   window.addEventListener('resize', updateScreenSize);
-   return () => window.removeEventListener('resize', updateScreenSize);
- }, []);
+  const activeServiceData = services.find(service => service.id === activeService);
+  const ActiveIcon = activeServiceData?.icon;
 
+  return (
+    <section
+      id="services"
+      ref={sectionRef}
+      className="py-12 px-4 sm:px-6 bg-stone-100 relative overflow-hidden"
+      onMouseMove={handleMouseMove}
+    >
+      {/* Background Elements */}
+      <div
+        className="absolute top-[10%] left-[-5%] w-3/5 h-2/5 bg-amber-300/20 rounded-full blur-3xl animate-pulse"
+        style={{ animationDuration: '15s' }}
+      />
+      <div
+        className="absolute bottom-[10%] right-[-10%] w-3/4 h-2/4 bg-blue-300/20 rounded-full blur-3xl animate-pulse"
+        style={{ animationDuration: '22s' }}
+      />
+      
+      {/* Interactive background */}
+      <div
+        className="absolute inset-0 opacity-15 pointer-events-none transition-opacity duration-1000"
+        style={{
+          background: `radial-gradient(circle 250px at ${mousePosition.x}px ${mousePosition.y}px, rgba(59, 130, 246, 0.1), transparent)`
+        }}
+      />
 
- useEffect(() => {
-   const timer = setTimeout(() => setIsVisible(true), 200);
+      {/* Floating elements */}
+      <div className="hidden xl:block absolute top-1/4 left-[5%] animate-float-slow opacity-10">
+        <PenTool size={40} className="text-blue-600" />
+      </div>
+      <div className="hidden xl:block absolute top-1/4 right-[5%] animate-float-medium opacity-10">
+        <Star size={32} className="text-amber-600" />
+      </div>
+      <div className="hidden xl:block absolute bottom-1/4 left-[5%] animate-float opacity-10">
+        <Award size={36} className="text-blue-600" />
+      </div>
+      <div className="hidden xl:block absolute bottom-1/4 right-[5%] animate-float-slow opacity-10">
+        <BookMarked size={32} className="text-amber-600" />
+      </div>
 
-
-   const observer = new IntersectionObserver(
-     (entries) => {
-       entries.forEach(entry => {
-         if (entry.isIntersecting) {
-           setIsVisible(true);
-         }
-       });
-     },
-     { threshold: 0.1 }
-   );
-
-
-   if (sectionRef.current) {
-     observer.observe(sectionRef.current);
-   }
-
-
-   return () => {
-     clearTimeout(timer);
-     if (sectionRef.current) {
-       observer.unobserve(sectionRef.current);
-     }
-   };
- }, []);
-
-
- const services = [
-   {
-     id: 1,
-     title: "Application Strategy",
-     icon: FileText,
-     description: "We develop comprehensive strategies to make your application stand out. Our experts create personalized roadmaps tailored to your academic strengths, extracurricular achievements, and career aspirations.",
-     color: "blue",
-   },
-   {
-     id: 2,
-     title: "Essay Crafting",
-     icon: Edit,
-     description: "Our mentors from top universities guide you through the art of crafting compelling narratives that captivate admission officers. We help you identify your unique stories and refine your writing style.",
-     color: "amber",
-   },
-   {
-     id: 3,
-     title: "Interview Preparation",
-     icon: Users,
-     description: "Master the art of impressive interviews with our comprehensive preparation program. We conduct mock interviews tailored to your target schools' specific formats and questions.",
-     color: "blue",
-   },
-   {
-     id: 4,
-     title: "Academic Excellence",
-     icon: Award,
-     description: "Achieve your highest potential with our personalized academic support and test preparation strategies. Our expert tutors develop customized study plans targeting your specific areas for improvement.",
-     color: "amber",
-   },
-   {
-     id: 5,
-     title: "Portfolio Development",
-     icon: Briefcase,
-     description: "Stand out with a thoughtfully curated portfolio of meaningful activities. We help you identify and develop extracurricular pursuits that align with your academic interests.",
-     color: "blue",
-   },
-   {
-     id: 6,
-     title: "International Access",
-     icon: Globe,
-     description: "Navigate the complex landscape of international university admissions with our specialized guidance. We provide insights into country-specific application requirements and visa processes.",
-     color: "amber",
-   },
-   {
-     id: 7,
-     title: "Career Planning",
-     icon: Lightbulb,
-     description: "Discover the academic path that aligns with your strengths and aspirations. Our mentors help you explore various disciplines and understand career trajectories.",
-     color: "blue",
-   },
- ];
-
-
- // Enhanced arc positioning with better scaling and more space for content
- const getPositionOnInvertedUArc = (index: number, total: number) => {
-   const screenConfig = {
-     desktop: { arcHeight: 1.6, arcWidth: 0.9 },
-     laptop: { arcHeight: 1.5, arcWidth: 0.85 },
-     tablet: { arcHeight: 1.4, arcWidth: 0.8 },
-     sm: { arcHeight: 1.3, arcWidth: 0.75 }
-   };
-  
-   const config = screenConfig[screenSize as keyof typeof screenConfig] || screenConfig.desktop;
-   const angleStep = Math.PI / (total - 1);
-   const angle = Math.PI - index * angleStep;
-
-
-   const x = Math.cos(angle) * config.arcWidth;
-   const y = Math.sin(angle) * config.arcHeight;
-
-
-   return { x, y };
- };
-
-
- const isMobile = screenSize === 'mobile';
-
-
- // Better content positioning in the center of the arc
- const getContentPosition = () => {
-   switch (screenSize) {
-     case 'desktop':
-       return 'top-[35%]';
-     case 'laptop':
-       return 'top-[35%]';
-     case 'tablet':
-       return 'top-[40%]';
-     case 'sm':
-       return 'top-[38%]';
-     default:
-       return 'top-1/2';
-   }
- };
-
-
- // Better responsive text sizes - made smaller as requested
- const getResponsiveTextSizes = () => {
-   const titleSizes = {
-     mobile: 'text-lg',
-     sm: 'text-xl',
-     tablet: 'text-2xl',
-     laptop: 'text-3xl',
-     desktop: 'text-3xl'
-   };
-
-
-   const descriptionSizes = {
-     mobile: 'text-sm',
-     sm: 'text-sm',
-     tablet: 'text-base',
-     laptop: 'text-base',
-     desktop: 'text-base'
-   };
-
-
-   const iconSizes = {
-     mobile: 18,
-     sm: 20,
-     tablet: 24,
-     laptop: 28,
-     desktop: 32
-   };
-
-
-   const iconContainerSizes = {
-     mobile: 'w-10 h-10',
-     sm: 'w-12 h-12',
-     tablet: 'w-14 h-14',
-     laptop: 'w-16 h-16',
-     desktop: 'w-18 h-18'
-   };
-
-
-   return {
-     title: titleSizes[screenSize as keyof typeof titleSizes] || titleSizes.desktop,
-     description: descriptionSizes[screenSize as keyof typeof descriptionSizes] || descriptionSizes.desktop,
-     iconSize: iconSizes[screenSize as keyof typeof iconSizes] || iconSizes.desktop,
-     iconContainer: iconContainerSizes[screenSize as keyof typeof iconContainerSizes] || iconContainerSizes.desktop
-   };
- };
-
-
- // Better circle sizes for the numbered buttons
- const getCircleSizes = () => {
-   const sizes = {
-     mobile: { container: 'w-12 h-12', text: 'text-sm' },
-     sm: { container: 'w-14 h-14', text: 'text-base' },
-     tablet: { container: 'w-16 h-16', text: 'text-lg' },
-     laptop: { container: 'w-20 h-20', text: 'text-xl' },
-     desktop: { container: 'w-24 h-24', text: 'text-2xl' }
-   };
-
-
-   return sizes[screenSize as keyof typeof sizes] || sizes.desktop;
- };
-
-
- const textSizes = getResponsiveTextSizes();
- const circleSizes = getCircleSizes();
-
-
- return (
-   <section
-     id="services"
-     ref={sectionRef}
-     className="py-16 lg:py-20 px-4 sm:px-6 bg-gray-50 relative overflow-hidden"
-     onMouseMove={handleMouseMove}
-   >
-    <div
-       className="absolute top-[15%] left-[-5%] w-3/5 h-2/5 bg-amber-300/20 rounded-full blur-3xl animate-pulse"
-       style={{ animationDuration: '15s' }}
-     ></div>
-     <div
-       className="absolute top-[150%] right-[20%] w-1/2 h-1/2 bg-amber-300/20 rounded-full blur-3xl animate-pulse"
-       style={{ animationDuration: '22s' }}
-     ></div>
-     <div
-       className="absolute bottom-[15%] right-[-10%] w-3/4 h-2/4 bg-blue-300/20 rounded-full blur-3xl animate-pulse"
-       style={{ animationDuration: '22s' }}
-     ></div>
-     {/* Enhanced interactive background */}
-     <div
-       className="absolute inset-0 opacity-15 pointer-events-none transition-opacity duration-1000"
-       style={{
-         background: `radial-gradient(circle 250px at ${mousePosition.x}px ${mousePosition.y}px, rgba(59, 130, 246, 0.1), transparent)`
-       }}
-     />
-
-
-     {/* Background elements */}
-     <div className="absolute top-[8%] right-[-6%] w-64 h-64 bg-amber-300/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '18s' }} />
-     <div className="absolute bottom-[8%] left-[-8%] w-64 h-64 bg-blue-300/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '22s' }} />
-
-
-     {/* Floating elements */}
-     {!isMobile && (
-       <>
-         <div className="absolute top-1/4 left-[6%] animate-float-slow opacity-10">
-           <PenTool size={screenSize === 'desktop' ? 50 : 35} className="text-blue-600" />
-         </div>
-         <div className="absolute top-1/3 right-[8%] animate-float-medium opacity-10">
-           <Star size={screenSize === 'desktop' ? 35 : 25} className="text-amber-600" />
-         </div>
-         <div className="absolute bottom-1/4 left-[12%] animate-float opacity-10">
-           <Award size={screenSize === 'desktop' ? 40 : 30} className="text-blue-600" />
-         </div>
-         <div className="absolute bottom-1/3 right-[10%] animate-float-slow opacity-10">
-           <BookMarked size={screenSize === 'desktop' ? 35 : 28} className="text-amber-600" />
-         </div>
-       </>
-     )}
-
-
-     <div className="max-w-7xl mx-auto relative z-10">
-       {/* Header - Updated to match impact card styling */}
-       <motion.div
-         className="flex items-center justify-center mb-16"
-         initial={{ opacity: 0, y: 20 }}
-         whileInView={{ opacity: 1, y: 0 }}
-         transition={{ duration: 0.7 }}
-         viewport={{ once: true }}
-       >
+       <div className="max-w-7xl mx-auto relative z-10">
+       {/* Updated Header to match AboutCard format */}
+       <div className="flex items-center justify-center mb-8">
          <div className="relative">
            <h2 className="text-4xl md:text-5xl font-light text-gray-800 relative inline-block tracking-tight">
-             our<span className="font-['PT_Serif',serif] italic font-semibold bg-gradient-to-r from-blue-700 via-blue-600 to-blue-500 bg-clip-text text-transparent ml-3">services</span>
+             our
+             <span className="font-serif italic font-semibold bg-gradient-to-r from-blue-700 via-blue-600 to-blue-500 bg-clip-text text-transparent ml-3 pr-1">services</span>
            </h2>
-         
-           {/* Animated star */}
-           <motion.span
-             className="absolute -right-8 -top-1 text-xl text-amber-500 not-italic"
-             animate={{
-               rotate: [0, 15, 0, -15, 0],
-               scale: [1, 1.2, 1, 1.2, 1]
+          
+           {/* Animated star - matching the about card */}
+           <span
+             className="absolute -right-6 -top-1 text-xl text-amber-500 not-italic"
+             style={{
+               animation: 'star-pulse 5s ease-in-out infinite'
              }}
-             transition={{
-               duration: 5,
-               repeat: Infinity,
-               ease: "easeInOut"
-             }}
-           >✦
-           </motion.span>
-         </div>
-       </motion.div>
-
-
-       {/* Main display area with better spacing */}
-       <div className={`relative max-w-6xl mx-auto ${isMobile ? 'flex flex-col' : 'min-h-[700px]'}`}>
-        
-         {/* Service content display - positioned in center of arc */}
-         <div className={`${
-           isMobile
-             ? 'order-1 mb-8'
-             : `absolute w-full max-w-2xl z-20 ${getContentPosition()} left-1/2 transform -translate-x-1/2 -translate-y-1/2`
-         }`}>
-           <div className="mx-auto px-4">
-             {services.map(service => {
-               if (service.id === activeService) {
-                 const ServiceIcon = service.icon;
-                 return (
-                   <div
-                     key={service.id}
-                     className="text-center space-y-4 lg:space-y-5"
-                     style={{
-                       opacity: isVisible ? 1 : 0,
-                       transform: isVisible ? 'translateY(0)' : 'translateY(15px)',
-                       transition: 'opacity 0.6s ease, transform 0.6s ease'
-                     }}
-                   >
-                     {/* Icon */}
-                     <div
-                       className={`
-                         ${textSizes.iconContainer} rounded-full mx-auto flex items-center justify-center shadow-md backdrop-blur-sm
-                         ${service.color === 'blue'
-                           ? 'bg-blue-50/80 border border-blue-100/50'
-                           : 'bg-amber-50/80 border border-amber-100/50'
-                         }
-                       `}
-                       style={{
-                         transform: hoveredService === service.id ? 'scale(1.05)' : 'scale(1)',
-                         transition: 'all 0.4s ease'
-                       }}
-                     >
-                       <ServiceIcon
-                         size={textSizes.iconSize}
-                         className={`${service.color === 'blue' ? 'text-blue-600' : 'text-amber-600'}`}
-                       />
-                     </div>
-
-
-                     {/* Title - made smaller */}
-                     <h3 className={`${textSizes.title} font-medium text-gray-800 tracking-tight leading-tight`}>
-                       {service.title}
-                     </h3>
-
-
-                     {/* Description - made smaller */}
-                     <div className="max-w-xl mx-auto">
-                       <p className={`text-gray-700 leading-relaxed ${textSizes.description} font-light tracking-wide`}>
-                         {service.description}
-                       </p>
-                     </div>
-
-
-                     {/* Accent */}
-                     <div className="flex items-center justify-center gap-1.5">
-                       <div className={`w-6 h-0.5 rounded-full ${service.color === 'blue' ? 'bg-blue-500/40' : 'bg-amber-500/40'}`} />
-                       <div className={`w-1.5 h-1.5 rounded-full ${service.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500'}`} />
-                       <div className={`w-6 h-0.5 rounded-full ${service.color === 'blue' ? 'bg-blue-500/40' : 'bg-amber-500/40'}`} />
-                     </div>
-                   </div>
-                 );
-               }
-               return null;
-             })}
-           </div>
-         </div>
-
-
-         {/* Service selection */}
-         <div className={`${isMobile ? 'order-2' : 'relative w-full h-[700px]'}`}>
-           {isMobile ? (
-             // Mobile layout
-             <div className="flex gap-4 pb-4 overflow-x-auto px-4 scrollbar-hide">
-               {services.map((service, index) => (
-                 <div
-                   key={service.id}
-                   className="flex-shrink-0 cursor-pointer transition-all duration-400 ease-out flex flex-col items-center group"
-                   style={{
-                     opacity: isVisible ? 1 : 0,
-                     animationDelay: `${0.1 * index}s`,
-                     animation: isVisible ? 'fadeInUp 0.5s ease-out forwards' : 'none'
-                   }}
-                   onClick={() => setActiveService(service.id)}
-                   onMouseEnter={() => setHoveredService(service.id)}
-                   onMouseLeave={() => setHoveredService(null)}
-                 >
-                   <div
-                     className={`
-                       relative ${circleSizes.container} rounded-full flex items-center justify-center overflow-hidden shadow-md backdrop-blur-sm
-                       ${activeService === service.id
-                         ? service.color === 'blue'
-                           ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue-500/25'
-                           : 'bg-gradient-to-br from-amber-500 to-amber-600 shadow-amber-500/25'
-                         : 'bg-white/90 border border-gray-200/60 group-hover:border-gray-300/80'}
-                       transition-all duration-400 ease-out
-                     `}
-                     style={{
-                       transform: hoveredService === service.id ? 'scale(1.05) translateY(-1px)' : 'scale(1) translateY(0)'
-                     }}
-                   >
-                     <div
-                       className={`
-                         ${circleSizes.text} font-bold relative
-                         ${activeService === service.id ? 'text-white' : 'text-gray-600 group-hover:text-gray-800'}
-                       `}
-                     >
-                       {String(service.id).padStart(2, '0')}
-                     </div>
-                   </div>
-
-
-                   <div
-                     className={`
-                       w-16 text-center text-xs font-medium tracking-wide mt-2
-                       ${activeService === service.id
-                         ? service.color === 'blue'
-                           ? 'text-blue-600'
-                           : 'text-amber-600'
-                         : 'text-gray-600 group-hover:text-gray-800'}
-                       transition-all duration-300
-                     `}
-                   >
-                     {service.title}
-                   </div>
-                 </div>
-               ))}
-             </div>
-           ) : (
-             // Desktop arc layout with bigger circles
-             <>
-               {services.map((service, index) => {
-                 const position = getPositionOnInvertedUArc(index, services.length);
-                 const leftPercent = ((position.x + 1) / 2) * 100;
-                 const topPercent = (((position.y) / 2) * 100) + 10;
-
-
-                 return (
-                   <div
-                     key={service.id}
-                     className="absolute cursor-pointer transition-all duration-400 ease-out group"
-                     style={{
-                       left: `${leftPercent}%`,
-                       top: `${topPercent}%`,
-                       transform: 'translate(-50%, -50%)',
-                       opacity: isVisible ? 1 : 0,
-                       animationDelay: `${0.1 * index}s`,
-                       animation: isVisible ? 'fadeInScale 0.6s ease-out forwards' : 'none'
-                     }}
-                     onClick={() => setActiveService(service.id)}
-                     onMouseEnter={() => setHoveredService(service.id)}
-                     onMouseLeave={() => setHoveredService(null)}
-                   >
-                     <div
-                       className={`
-                         relative ${circleSizes.container} rounded-full flex items-center justify-center overflow-hidden shadow-lg backdrop-blur-sm
-                         ${activeService === service.id
-                           ? service.color === 'blue'
-                             ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue-500/30'
-                             : 'bg-gradient-to-br from-amber-500 to-amber-600 shadow-amber-500/30'
-                           : 'bg-white/95 border border-gray-200/70 group-hover:border-gray-300/90 group-hover:shadow-md'}
-                         transition-all duration-400 ease-out
-                       `}
-                       style={{
-                         transform: hoveredService === service.id
-                           ? 'scale(1.1) translateY(-2px)'
-                           : activeService === service.id
-                             ? 'scale(1.05)'
-                             : 'scale(1) translateY(0)'
-                       }}
-                     >
-                       <div className="relative">
-                         <div
-                           className={`
-                             ${circleSizes.text} font-bold relative
-                             ${activeService === service.id ? 'text-white' : 'text-gray-600 group-hover:text-gray-800'}
-                           `}
-                         >
-                           {String(service.id).padStart(2, '0')}
-                         </div>
-                       </div>
-                     </div>
-
-
-                     <div
-                       className={`
-                         absolute w-32 top-full left-1/2 transform -translate-x-1/2 mt-4
-                         text-center font-medium tracking-wide text-sm
-                         ${activeService === service.id
-                           ? service.color === 'blue'
-                             ? 'text-blue-600'
-                             : 'text-amber-600'
-                           : 'text-gray-600 group-hover:text-gray-800'}
-                         transition-all duration-300
-                       `}
-                       style={{
-                         opacity: hoveredService === service.id || activeService === service.id ? 1 : 0.7,
-                         transform: `translate(-50%, ${hoveredService === service.id || activeService === service.id ? '0' : '-2px'})`
-                       }}
-                     >
-                       {service.title}
-                     </div>
-                   </div>
-                 );
-               })}
-             </>
-           )}
+           >
+             ✦
+           </span>
          </div>
        </div>
-     </div>
 
+       <div className="flex justify-center mb-12">
+         <p className="text-gray-600 text-base lg:text-lg max-w-2xl mx-auto leading-relaxed text-center">
+           Comprehensive guidance tailored to your unique academic journey
+         </p>
+       </div>
 
-     {/* CSS animations */}
-     <style>{`
-       .scrollbar-hide {
-         -ms-overflow-style: none;
-         scrollbar-width: none;
-       }
-       .scrollbar-hide::-webkit-scrollbar {
-         display: none;
-       }
+        {/* Main Content - Balanced 50/50 layout */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          
+          {/* Service Navigation - Left Side */}
+          <div className="order-2 lg:order-1">
+            <div className="sticky top-6">
+              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">Select Service</h3>
+              <div className="space-y-2">
+                {services.map((service, index) => {
+                  const ServiceIcon = service.icon;
+                  return (
+                    <div
+                      key={service.id}
+                      className={`
+                        cursor-pointer p-3 rounded-xl border transition-all duration-300 transform
+                        ${activeService === service.id
+                          ? service.color === 'blue'
+                            ? 'bg-blue-50 border-blue-200 shadow-md scale-102'
+                            : 'bg-amber-50 border-amber-200 shadow-md scale-102'
+                          : 'bg-white/80 border-gray-200 hover:border-gray-300 hover:shadow-sm hover:scale-101'
+                        }
+                      `}
+                      style={{
+                        opacity: isVisible ? 1 : 0,
+                        transform: `translateX(${isVisible ? 0 : -20}px) ${activeService === service.id ? 'scale(1.02)' : 'scale(1)'}`,
+                        transitionDelay: `${index * 0.08}s`
+                      }}
+                      onClick={() => setActiveService(service.id)}
+                      onMouseEnter={() => setHoveredService(service.id)}
+                      onMouseLeave={() => setHoveredService(null)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        {/* Service Number */}
+                        <div
+                          className={`
+                            w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0
+                            ${activeService === service.id
+                              ? service.color === 'blue'
+                                ? 'bg-blue-500 text-white shadow-blue-500/30'
+                                : 'bg-amber-500 text-white shadow-amber-500/30'
+                              : 'bg-gray-100 text-gray-600'
+                            }
+                            transition-all duration-300 shadow-md
+                          `}
+                        >
+                          {String(service.id).padStart(2, '0')}
+                        </div>
 
+                        {/* Service Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <ServiceIcon 
+                              size={14} 
+                              className={`
+                                flex-shrink-0
+                                ${activeService === service.id
+                                  ? service.color === 'blue'
+                                    ? 'text-blue-600'
+                                    : 'text-amber-600'
+                                  : 'text-gray-500'
+                                }
+                              `}
+                            />
+                            <h4 
+                              className={`
+                                font-medium text-sm
+                                ${activeService === service.id
+                                  ? service.color === 'blue'
+                                    ? 'text-blue-700'
+                                    : 'text-amber-700'
+                                  : 'text-gray-700'
+                                }
+                              `}
+                            >
+                              {service.title}
+                            </h4>
+                          </div>
+                          
+                          {/* Preview text for non-active services */}
+                          {activeService !== service.id && (
+                            <p className="text-xs text-gray-500 line-clamp-1 leading-relaxed">
+                              {service.description.substring(0, 50)}...
+                            </p>
+                          )}
+                        </div>
 
-       .w-18 { width: 4.5rem; }
-       .h-18 { height: 4.5rem; }
+                        {/* Active indicator */}
+                        <div className="flex-shrink-0">
+                          {activeService === service.id ? (
+                            <div 
+                              className={`
+                                w-1 h-6 rounded-full
+                                ${service.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500'}
+                              `}
+                            />
+                          ) : (
+                            <div className="w-1 h-6" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
 
+          {/* Active Service Content - Right Side */}
+          <div className="order-1 lg:order-2">
+            {activeServiceData && (
+              <div
+                key={activeService}
+                className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-gray-100/50 h-full"
+                style={{
+                  opacity: isVisible ? 1 : 0,
+                  transform: `translateY(${isVisible ? 0 : 20}px)`,
+                  transition: 'all 0.5s ease-out'
+                }}
+              >
+                {/* Icon and Title */}
+                <div className="flex items-start space-x-4 mb-5">
+                  <div
+                    className={`
+                      w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0
+                      ${activeServiceData.color === 'blue'
+                        ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue-500/30'
+                        : 'bg-gradient-to-br from-amber-500 to-amber-600 shadow-amber-500/30'
+                      }
+                    `}
+                  >
+                    {ActiveIcon && (
+                      <ActiveIcon size={24} className="text-white" />
+                    )}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-2xl lg:text-3xl font-light text-gray-800 mb-2 leading-tight">
+                      {activeServiceData.title}
+                    </h3>
+                    <div className="flex items-center space-x-3">
+                      <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Service</span>
+                      <div 
+                        className={`
+                          w-8 h-0.5 rounded-full
+                          ${activeServiceData.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500'}
+                        `}
+                      />
+                      <span 
+                        className={`
+                          text-xs font-bold px-2 py-1 rounded-full
+                          ${activeServiceData.color === 'blue' 
+                            ? 'text-blue-600 bg-blue-50' 
+                            : 'text-amber-600 bg-amber-50'
+                          }
+                        `}
+                      >
+                        {String(activeServiceData.id).padStart(2, '0')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-       @keyframes float {
-         0%, 100% { transform: translateY(0px) rotate(0deg); }
-         50% { transform: translateY(-8px) rotate(1deg); }
-       }
+                {/* Description */}
+                <div className="mb-5">
+                  <p className="text-gray-700 text-base leading-relaxed font-light">
+                    {activeServiceData.description}
+                  </p>
+                </div>
 
+                {/* Features Grid */}
+                <div className="mb-5">
+                  <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Key Features</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {activeServiceData.features.map((feature, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <Check 
+                          size={14} 
+                          className={`
+                            flex-shrink-0
+                            ${activeServiceData.color === 'blue' ? 'text-blue-500' : 'text-amber-500'}
+                          `}
+                        />
+                        <span className="text-sm text-gray-600 font-medium">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-       @keyframes float-medium {
-         0%, 100% { transform: translateY(0px) rotate(0deg); }
-         50% { transform: translateY(-6px) rotate(-2deg); }
-       }
+                {/* Call to action */}
+                <div className="pt-5 border-t border-gray-100">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      className={`
+                        px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 flex-1 sm:flex-initial flex items-center justify-center space-x-2
+                        ${activeServiceData.color === 'blue'
+                          ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-blue-500/25'
+                          : 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/25'
+                        }
+                        shadow-lg hover:shadow-xl transform hover:-translate-y-1
+                      `}
+                    >
+                      <span>Get Started</span>
+                      <ArrowRight size={14} />
+                    </button>
+                    <button className="px-6 py-3 rounded-xl font-medium text-sm border border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition-all duration-300 hover:shadow-md">
+                      Learn More
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
+        {/* Mobile Service Dots */}
+        <div className="lg:hidden mt-6 flex justify-center space-x-2">
+          {services.map((service) => (
+            <button
+              key={service.id}
+              className={`
+                w-3 h-3 rounded-full transition-all duration-300
+                ${activeService === service.id
+                  ? service.color === 'blue'
+                    ? 'bg-blue-500 scale-125 shadow-blue-500/30 shadow-lg'
+                    : 'bg-amber-500 scale-125 shadow-amber-500/30 shadow-lg'
+                  : 'bg-gray-300 hover:bg-gray-400'
+                }
+              `}
+              onClick={() => setActiveService(service.id)}
+            />
+          ))}
+        </div>
+      </div>
 
-       @keyframes float-slow {
-         0%, 100% { transform: translateY(0px) rotate(0deg); }
-         50% { transform: translateY(-10px) rotate(1deg); }
-       }
+      {/* CSS animations */}
+      <style>{`
+        .scale-101 {
+          transform: scale(1.01);
+        }
 
+        .scale-102 {
+          transform: scale(1.02);
+        }
 
-       @keyframes fadeInScale {
-         from {
-           opacity: 0;
-           transform: translateY(15px) scale(0.9) translate(-50%, -50%);
-         }
-         to {
-           opacity: 1;
-           transform: translateY(0) scale(1) translate(-50%, -50%);
-         }
-       }
+        .line-clamp-1 {
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
 
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
 
-       @keyframes fadeInUp {
-         from {
-           opacity: 0;
-           transform: translateY(15px);
-         }
-         to {
-           opacity: 1;
-           transform: translateY(0);
-         }
-       }
+        @keyframes wiggle {
+          0%, 100% { transform: rotate(0deg) scale(1); }
+          25% { transform: rotate(15deg) scale(1.05); }
+          50% { transform: rotate(0deg) scale(1.1); }
+          75% { transform: rotate(-15deg) scale(1.05); }
+        }
 
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-8px) rotate(1deg); }
+        }
 
-       .animate-float {
-         animation: float 6s ease-in-out infinite;
-       }
+        @keyframes float-medium {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-6px) rotate(-2deg); }
+        }
 
-       .animate-float-medium {
-         animation: float-medium 8s ease-in-out infinite;
-       }
+        @keyframes float-slow {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-10px) rotate(1deg); }
+        }
 
+        .animate-float {
+          animation: float 6s ease-in-out infinite;
+        }
 
-       .animate-float-slow {
-         animation: float-slow 10s ease-in-out infinite;
-       }
-     `}</style>
-   </section>
- );
-};
+        .animate-float-medium {
+          animation: float-medium 8s ease-in-out infinite;
+        }
+
+        .animate-float-slow {
+          animation: float-slow 10s ease-in-out infinite;
+        }
+      `}</style>
+    </section>
+  );
+}

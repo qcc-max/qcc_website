@@ -179,42 +179,72 @@ export const HeroCard = ({
 }) => {
   const navigate = useNavigate();
 
-  // Connection dots data for the new map
-  const connectionDots = [
-    {
-      start: {
-        lat: 64.2008,
-        lng: -149.4937,
-      }, // Alaska (Fairbanks)
-      end: {
-        lat: 34.0522,
-        lng: -118.2437,
-      }, // Los Angeles
-    },
-    {
-      start: { lat: 64.2008, lng: -149.4937 }, // Alaska (Fairbanks)
-      end: { lat: -15.7975, lng: -47.8919 }, // Brazil (Brasília)
-    },
-    {
-      start: { lat: -15.7975, lng: -47.8919 }, // Brazil (Brasília)
-      end: { lat: 38.7223, lng: -9.1393 }, // Lisbon
-    },
-    {
-      start: { lat: 51.5074, lng: -0.1278 }, // London
-      end: { lat: 28.6139, lng: 77.209 }, // New Delhi
-    },
-    {
-      start: { lat: 28.6139, lng: 77.209 }, // New Delhi
-      end: { lat: 43.1332, lng: 131.9113 }, // Vladivostok
-    },
-    {
-      start: { lat: 28.6139, lng: 77.209 }, // New Delhi
-      end: { lat: -1.2921, lng: 36.8219 }, // Nairobi
-    },
-  ];
+ // Connection dots data for the new map
+const connectionDots = [
+  {
+    start: {
+      lat: 64.2008,
+      lng: -149.4937,
+    }, // Alaska (Fairbanks)
+    end: {
+      lat: 35.0522,
+      lng: -100.2437,
+    }, // Los Angeles
+  },
+  {
+    start: { lat: 64.2008, lng: -149.4937 }, // Alaska (Fairbanks)
+    end: { lat: -25, lng: -55.8919 }, // Brazil (Brasília)
+  },
+  {
+    start: { lat: -25, lng: -55.8919 }, // Brazil (Brasília)
+    end: { lat: 34.5553, lng: 69.2075 }, // Kabul
+  },
+  {
+    start: { lat: 47.5074, lng: -1.1278 }, // London
+    end: { lat: 43.6532, lng: -100.3832 }, // Toronto, Canada
+  },
+  {
+    start: { lat: 31.5497, lng: 74.3436 }, // Lahore, Pakistan
+    end: { lat: 43.1332, lng: 131.9113 }, // Vladivostok
+  },
+  {
+    start: { lat: 31.5497, lng: 74.3436 }, // Lahore, Pakistan
+    end: { lat: -1.2921, lng: 30.8219 }, // Nairobi
+  },
+  {
+    start: { lat: -45, lng: 143.2093 }, // Sydney, Australia
+    end: { lat: 31.5497, lng: 74.3436 }, // Lahore, Pakistan
+  },
+  {
+    start: { lat: 34.5553, lng: 69.2075 }, // Kabul, Afghanistan
+    end: { lat: 39.9334, lng: 32.8597 }, // Ankara, Turkey
+  },
+  
+  {
+    start: { lat: 31.3891, lng: 120.9853 }, // Kunshan, China
+    end: { lat: 39.9334, lng: 32.8597 }, // Ankara, Turkey
+  },
+  {
+    start: { lat: 43.6532, lng: -70.3832 }, // Toronto, Canada
+    end: { lat: -45, lng: 143.2093 }, // Sydney, Australia
+  },
+  {
+    start: { lat: 55.5200, lng: 13.4050 }, // Berlin, Germany
+    end: { lat: 31.5497, lng: 74.3436 }, // Lahore, Pakistan
+  },
+  
+  {
+    start: { lat: 31.3891, lng: 120.9853 }, // Kunshan, China
+    end: { lat: -45, lng: 143.2093 }, // Sydney, Australia
+  },
+  {
+    start: { lat: 39.9334, lng: 32.8597 }, // Ankara, Turkey
+    end:{ lat: 47.5074, lng: -1.1278 }, // London, UK
+  },
+];
 
   return (
-    <section id="home" className="min-h-screen w-screen h-screen pt-20 pb-12 px-0 bg-gray-50 relative overflow-hidden">
+    <section id="home" className="min-h-screen w-screen h-screen pt-20 pb-12 px-0 bg-stone-100 relative overflow-hidden">
       {/* Animated background accents */}
       <div
         className="absolute top-[250%] right-[-5%] w-3/5 h-2/5 bg-amber-300/20 rounded-full blur-3xl animate-pulse"

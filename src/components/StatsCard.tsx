@@ -466,7 +466,7 @@ export default function StatsCard() {
                delay: 0.2 + (index * 0.1)
              }}
            >
-             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-100 to-amber-50 flex items-center justify-center mb-2 shadow-lg">
+             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-amber-50 flex items-center justify-center mb-2 shadow-lg">
                <StatIcon size={30} className={stat.color} />
              </div>
              <h3 className="text-gray-800 text-2xl font-medium mb-1">{stat.value}</h3>
@@ -552,7 +552,7 @@ export default function StatsCard() {
    <section
      id="impact"
      ref={sectionRef}
-     className="py-24 px-6 bg-gray-50 relative overflow-hidden"
+     className="py-24 px-6 bg-stone-100 relative overflow-hidden"
    >
      {/* Background light elements */}
      <div

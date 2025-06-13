@@ -56,7 +56,7 @@ export function BookingPage() {
 
  return (
    // Add adequate padding at the top to account for the navbar height
-   <section className="py-20 px-6 bg-gray-50 w-full min-h-screen pt-20 relative overflow-hidden" 
+   <section className="py-20 px-6 bg-stone-100  w-full min-h-screen pt-20 relative overflow-hidden" 
      style={{ minHeight: 'calc(var(--vh, 1vh) * 100)' }}
    >
      {/* Light mode background elements */}

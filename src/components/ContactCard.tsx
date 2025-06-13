@@ -121,7 +121,7 @@ export const ContactCard = () => {
  return (
    <section
      id="contact"
-     className="py-20 px-6 bg-gray-50 relative overflow-hidden"
+     className="py-20 px-6 bg-stone-100 relative overflow-hidden"
    >
      {/* Light mode background elements */}
      <div

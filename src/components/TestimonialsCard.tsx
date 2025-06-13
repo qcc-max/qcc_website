@@ -19,7 +19,7 @@ export default function TestimonialsCard() {
       designation: "University of Miami",
       src: "/Umer.jpeg",
       gradient: "from-amber-400/20 to-blue-500/20",
-      instagramUrl: "https://www.instagram.com/p/YOUR_POST_ID_1/"
+      instagramUrl: "https://www.instagram.com/p/DI6tN_7IwwF/?utm_source=ig_web_copy_link&igsh=MTMwNGRyZGE2Znloeg=="
     },
     {
       quote: "I struggled to connect my passion for the environment with my fascination for physics. College Crafters helped me tie these themes together in a way that felt natural and compelling. Their guidance highlighted my unique interests while staying true to who I am.",
@@ -27,15 +27,15 @@ export default function TestimonialsCard() {
       designation: "University College London",
       src: "/maaz.jpeg",
       gradient: "from-blue-400/20 to-amber-500/20",
-      instagramUrl: "https://www.instagram.com/p/YOUR_POST_ID_2/"
+      instagramUrl: "https://www.instagram.com/p/DKRinexI8Db/?utm_source=ig_web_copy_link&igsh=bHdkaDZpd3ZteWt1"
     },
     {
-      quote: "I was nervous about my supplemental essays, but the mentors from Harvard at College Crafters broke down each prompt and helped me find powerful personal stories. Their insight and feedback kept my voice front and center, playing a huge role in my acceptance.",
+      quote: "I joined late and didn’t really know how to bring my ideas together. QCC made space for what mattered to me and still helped me build essays that were sharp and meaningful. Their feedback made everything clearer, and I wouldn’t have gotten here without them.",
       name: "Taimoor Ali Asghar",
       designation: "Bennington College",
       src: "/taimoor.jpeg",
       gradient: "from-amber-500/20 to-blue-400/20",
-      instagramUrl: "https://www.instagram.com/p/YOUR_POST_ID_3/"
+      instagramUrl: "https://www.instagram.com/p/DKC7y2KoZ_Y/?utm_source=ig_web_copy_link&igsh=MTY4czAwM2hpdnd5aw=="
     },
     {
       quote: "The personalized approach at College Crafters made all the difference. They didn't just help me with applications - they helped me discover my strengths and present them authentically. I couldn't have done it without their support.",
@@ -43,31 +43,31 @@ export default function TestimonialsCard() {
       designation: "Carleton College",
       src: "/niloufar.jpeg",
       gradient: "from-blue-500/20 to-amber-400/20",
-      instagramUrl: "https://www.instagram.com/p/YOUR_POST_ID_4/"
+      instagramUrl: "https://www.instagram.com/p/DI9ocUpg7g4/?utm_source=ig_web_copy_link&igsh=M2tuZDVsbW5uejBu"
     },
     {
-      quote: "College Crafters transformed my scattered interests into a cohesive narrative. Their mentors understood my vision and helped me articulate it in a way that resonated with admissions committees.",
+      quote: "In my journey through college applications, QCC supported me by encouraging me to take part in activities which reflected my interest in my intended major. In particular, they helped me showcase the honours I had accumulated over the years to create a lasting impression on the admission officers' minds. Truly indebted to them to help my dream to study abroad come true.",
       name: "Hafi Shaheer Khan",
       designation: "Duke Kunshan",
       src: "/hafi.jpeg",
       gradient: "from-amber-600/20 to-blue-600/20",
-      instagramUrl: "https://www.instagram.com/p/YOUR_POST_ID_5/"
+      instagramUrl: "https://www.instagram.com/p/DJAGypng5b-/?utm_source=ig_web_copy_link&igsh=MzZybG8xajdteGlv"
     },
     {
-      quote: "The essay guidance I received was incredible. They helped me find my voice and tell my story in a way that felt genuine and compelling. I'm grateful for their expertise and support throughout the process.",
+      quote: "From brainstorming to final drafts, QCC guided me through every essay with care and clarity. They helped me find meaning in moments I’d overlooked and made the whole process feel a lot less overwhelming. Even in the busiest stretches, their support felt steady and thoughtful. Their guidance turned a stressful journey into something empowering.",
       name: "Rida Habib",
       designation: "Minerva University",
       src: "/WhatsApp Image 2025-05-30 at 17.58.07.jpeg",
       gradient: "from-blue-600/20 to-amber-600/20",
-      instagramUrl: "https://www.instagram.com/p/YOUR_POST_ID_6/"
+      instagramUrl: "https://www.instagram.com/p/DKSMtNDo_vN/?utm_source=ig_web_copy_link&igsh=dGhkZThsMWthaTI5"
     },
     {
-      quote: "The essay guidance I received was incredible. They helped me find my voice and tell my story in a way that felt genuine and compelling. I'm grateful for their expertise and support throughout the process.",
+      quote: "I remember sending QCC my first draft thinking it was pretty solid. They sent it back, torn apart in the best way. Every sentence was challenged. Every idea had to earn its place. It wasn’t easy, but it was exactly what I needed. They didn’t just help me write essays. They made sure I understood my story. QCC pushed me, sharpened my thinking, and made me better. Wouldn’t have made it without them.",
       name: "Ahmed Bajwa",
       designation: "Imperial college London",
       src: "/bajwa.jpeg",
       gradient: "from-blue-600/20 to-amber-600/20",
-      instagramUrl: "https://www.instagram.com/p/YOUR_POST_ID_6/"
+      instagramUrl: "https://www.instagram.com/p/DKPqS38IOt1/?utm_source=ig_web_copy_link&igsh=N3A2eHFjaGZlMjJj"
     },
     {
       quote: "The essay guidance I received was incredible. They helped me find my voice and tell my story in a way that felt genuine and compelling. I'm grateful for their expertise and support throughout the process.",
@@ -75,15 +75,15 @@ export default function TestimonialsCard() {
       designation: "Union College",
       src: "/shah.jpeg",
       gradient: "from-blue-600/20 to-amber-600/20",
-      instagramUrl: "https://www.instagram.com/p/YOUR_POST_ID_6/"
+      instagramUrl: "https://www.instagram.com/p/DJ971XgAgFb/?utm_source=ig_web_copy_link&igsh=MWtyZXo0YTM1Ymx0eg=="
     },
     {
-      quote: "The essay guidance I received was incredible. They helped me find my voice and tell my story in a way that felt genuine and compelling. I'm grateful for their expertise and support throughout the process.",
+      quote: "I came in with stories from startups, trading, and tech but didn’t know how to put them together. QCC helped me build a clear strategy and made sure my essays actually sounded like me. Their feedback made the whole process simple and real.",
       name: "Muhammad Hassnain Khan",
       designation: "Minerva University",
       src: "/hasnain.jpeg",
       gradient: "from-blue-600/20 to-amber-600/20",
-      instagramUrl: "https://www.instagram.com/p/YOUR_POST_ID_6/"
+      instagramUrl: "https://www.instagram.com/p/DJUpff6AROc/?utm_source=ig_web_copy_link&igsh=ZjBtdzRwNmdvczFi"
     }
   ];
 
@@ -91,7 +91,7 @@ export default function TestimonialsCard() {
     if (isAnimating) return;
     setIsAnimating(true);
     setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % testimonials.length);
+      setCurrentIndex((prev) => (prev + 3) % testimonials.length);
       setIsAnimating(false);
     }, 300);
   };
@@ -100,7 +100,7 @@ export default function TestimonialsCard() {
     if (isAnimating) return;
     setIsAnimating(true);
     setTimeout(() => {
-      setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+      setCurrentIndex((prev) => (prev - 3 + testimonials.length) % testimonials.length);
       setIsAnimating(false);
     }, 300);
   };
@@ -130,7 +130,7 @@ export default function TestimonialsCard() {
   const visibleTestimonials = getVisibleTestimonials();
 
   return (
-    <section id="testimonials" className="py-20 px-6 bg-gray-50 relative overflow-hidden">
+    <section id="testimonials" className="py-20 px-6 bg-stone-100  relative overflow-hidden">
       {/* Background decorative elements */}
       <div
         className="absolute top-[10%] left-[-8%] w-4/5 h-3/5 bg-gradient-to-br from-amber-300/15 via-amber-200/10 to-transparent rounded-full blur-3xl animate-pulse"

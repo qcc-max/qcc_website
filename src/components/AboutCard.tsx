@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import {
 BookOpen,
-Users,
-GraduationCap,
-Award,
 BookMarked,
 MapPin,
 Sparkles
@@ -15,7 +12,6 @@ Sparkles
 export const AboutCard = () => {
 // State for animations and interactions
 const [isVisible, setIsVisible] = useState(false);
-const [activeTab, setActiveTab] = useState(0);
 const [isHovered, setIsHovered] = useState(false);
 const sectionRef = useRef<HTMLElement | null>(null);
  useEffect(() => {
@@ -46,33 +42,11 @@ const sectionRef = useRef<HTMLElement | null>(null);
 
 
 
-// About content broken into tabs for more interactive exploration
-const aboutTabs = [
-  {
-    title: "Our Mission",
-    icon: <Award size={18} />,
-    content: "At QCC, we know what it feels like to be on the other side of the admissions process. You are hopeful, uncertain, and determined, all at once. We've been there too. That is why we built QCC — a platform created for students, by students. We aim to make world-class college counseling accessible to everyone, not just the privileged few. We believe that great guidance should not come with an impossible price tag. We are here to level the playing field and help more students turn ambition into acceptance."
-  },
-  {
-    title: "Our Expertise",
-    icon: <GraduationCap size={18} />,
-    content: "From personal statements and supplemental essays to interviews and scholarship applications, we specialize in crafting every element of your application to reflect your true potential. With deep knowledge of admission systems in the U.S., U.K., Canada, and beyond, we know what makes an application stand out—because we've helped students get there time and time again."
-  },
-  {
-    title: "Our Network",
-    icon: <Users size={18} />,
-    content: "Our global network includes mentors and successful alumni from top institutions such as Columbia, Princeton, Duke, Oxford, Imperial, the University of Toronto, NYU Abu Dhabi, and KAIST. We connect students with individuals who've not only gained admission but thrived in these environments—providing insider insights, interview prep, and honest guidance. From Oxbridge tutorials to Ivy League essay feedback, our network ensures you're supported by those who've walked the path before you."
-  }
-];
-
-
-
-
  return (
   <section
     id="about"
     ref={sectionRef}
-    className="py-24 px-6 bg-gray-50 relative overflow-hidden"
+    className="py-24 px-6 bg-stone-100 relative overflow-hidden"
   >
     {/* Interactive background elements */}
     <div
@@ -166,24 +140,6 @@ const aboutTabs = [
 
 
           <div className="relative z-10">
-            {/* Refined tab navigation */}
-            <div className="flex flex-wrap gap-3 mb-10">
-              {aboutTabs.map((tab, index) => (
-                <button
-                  key={index}
-                  onClick={() => setActiveTab(index)}
-                  className={`flex items-center gap-2.5 px-5 py-3 rounded-full text-sm md:text-base font-medium transition-all duration-300 ${
-                    activeTab === index
-                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-600/25 scale-105'
-                      : 'bg-gray-100/80 text-gray-700 hover:bg-gray-200/80 hover:scale-102'
-                  }`}
-                >
-                  <span className="hidden md:inline opacity-90">{tab.icon}</span>
-                  <span>{tab.title}</span>
-                </button>
-              ))}
-            </div>
-          
             {/* Refined content area */}
             <div className="bg-gray-50/80 rounded-3xl p-8 mb-10 border border-gray-100/50">
               <div
@@ -196,8 +152,23 @@ const aboutTabs = [
               >
                 <p className="text-lg md:text-xl leading-relaxed relative text-gray-700 font-light">
                   <span className="absolute -left-4 top-1 text-amber-400 text-lg">✦</span>
-                  {aboutTabs[activeTab].content}
-                </p>
+                 
+                 
+                 At QCC, we understand what it feels like to be on the other side of the admissions process. You are hopeful, uncertain, and determined. We have been there too. That is why we created QCC, a platform built by students for students. Our mission is to make world-class college guidance accessible, affordable, and honest.
+                 </p>
+                 <br></br>
+                  <p className="text-lg md:text-xl leading-relaxed relative text-gray-700 font-light">
+
+From personal statements to scholarship essays, we have helped students gain admission to universities like Harvard, Stanford, the University of Toronto, NYU Abu Dhabi, KAIST, and more. Our team offers real experience and effective strategies, supported by a global network of mentors, alumni, and former admissions officers who understand what it takes to succeed.
+</p>
+<br></br>
+
+ <p className="text-lg md:text-xl leading-relaxed relative text-gray-700 font-light">
+
+We believe ambition should never be limited by access. At QCC, we are here to help you craft your story and make sure it is heard.
+</p>
+
+                
               </div>
             </div>
           

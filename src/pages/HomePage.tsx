@@ -3,7 +3,7 @@ import { Navbar } from '../components/Navbar';
 import { HeroCard } from '../components/HeroCard';
 import StatsCard from '../components/StatsCard';
 import { AboutCard } from '../components/AboutCard';
-import { ServicesCard }  from '../components/ServicesCard';
+import ServicesCard from '../components/ServicesCard';
 import TestimonialsCard   from '../components/TestimonialsCard';
 import { ContactCard } from '../components/ContactCard';
 
