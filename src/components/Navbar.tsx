@@ -221,7 +221,7 @@ export const Navbar = () => {
           <div className="flex justify-between items-center p-4 sm:p-6 border-b border-blue-100 bg-white relative z-10">
             {/* Improved mobile logo container with background */}
             <div
-              className="flex items-center h-10 sm:h-12 bg-white rounded-lg"
+              className="flex items-center h-10 sm:h-12 bg-stone-100 rounded-lg"
               onClick={() => {
                 navigate('/');
                 setIsMobileMenuOpen(false);
