@@ -133,7 +133,7 @@ export const Navbar = () => {
   return (
     <header
       className={`w-full fixed top-0 left-0 z-50 transition-all duration-500 ${
-        scrolled
+        (scrolled || !isHomePage)
           ? 'bg-white/95 backdrop-blur-md shadow-md shadow-blue-100/50 border-b border-blue-100'
           : 'bg-white/80 backdrop-blur-sm'
       }`}
@@ -159,7 +159,7 @@ export const Navbar = () => {
           <div className="hidden md:flex items-center justify-center mx-auto">
             <NavigationMenu>
               <NavigationMenuList className={`flex h-10 sm:h-12 items-center justify-center p-1 rounded-full shadow-lg shadow-blue-100/50 ${
-                scrolled ? 'bg-white' : 'bg-white/80 backdrop-blur-sm'
+                (scrolled || !isHomePage) ? 'bg-stone-100' : 'bg-white/80 backdrop-blur-sm'
               } border border-blue-100 hover:shadow-blue-200/50 transition-all duration-300 w-auto`}>
                 {navItems.map((item) => (
                   <NavigationMenuItem key={item.id}>

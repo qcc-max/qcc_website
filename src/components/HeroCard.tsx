@@ -99,7 +99,7 @@ const WorldMap = ({
   );
 };
 
-// Simplified StatsCard Component with CSS positioning
+// Fixed StatsCard Component with responsive positioning
 const StatsCard = ({ 
   studentCount = '500+', 
   countryCount = '15+',
@@ -107,19 +107,20 @@ const StatsCard = ({
   return (
     <motion.div
       className="absolute bg-white/90 backdrop-blur-lg rounded-xl shadow-xl border border-white/30 flex items-center gap-2 z-20
-                 // Responsive sizing - made smaller and more stylish
-                 p-1.5 text-xs w-28 h-12
-                 sm:p-2 sm:text-xs sm:w-32 sm:h-14
-                 md:p-2 md:text-sm md:w-36 md:h-16
-                 lg:p-2.5 lg:text-sm lg:w-40 lg:h-18
-                 xl:p-3 xl:text-base xl:w-44 xl:h-20
-                 hover:shadow-2xl hover:bg-white/95 transition-all duration-300"
-      style={{
-        // Position between Australia and Africa (Indian Ocean area)
-        left: '62%',  // Horizontal position - adjust this to move left/right
-        top: '87%',   // Vertical position - adjust this to move up/down
-        transform: 'translate(-50%, -50%)'
-      }}
+                 // Responsive sizing and positioning
+                 p-2 text-xs w-32 h-14
+                 sm:p-2.5 sm:text-sm sm:w-36 sm:h-16
+                 md:p-3 md:text-sm md:w-40 md:h-18
+                 lg:p-3 lg:text-base lg:w-44 lg:h-20
+                 hover:shadow-2xl hover:bg-white/95 transition-all duration-300
+                 // Mobile: Bottom right corner
+                 bottom-4 left-4
+                 // Small screens: Move to different position
+                 sm:bottom-8 sm:right-8
+                 // Medium screens: Center-right area
+                 md:top-3/4 md:left-3/5 md:right-auto md:transform md:-translate-y-1/2
+                 // Large screens: Original Indian Ocean position
+                 lg:top-3/4 lg:left-3/5 lg:right-auto lg:transform lg:-translate-x-1/2 lg:-translate-y-1/2"
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: 1 }}
@@ -127,16 +128,16 @@ const StatsCard = ({
     >
       <div className="flex flex-col items-center flex-1">
         <Users className="text-blue-500 w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-4 lg:h-4 mb-0.5" />
-        <span className="text-gray-800 font-bold text-[10px] sm:text-xs md:text-sm lg:text-sm leading-none">{studentCount}</span>
-        <span className="text-gray-500 text-[8px] sm:text-[9px] md:text-[10px] lg:text-xs leading-none mt-0.5">Students</span>
+        <span className="text-gray-800 font-bold text-xs sm:text-sm md:text-sm lg:text-base leading-none">{studentCount}</span>
+        <span className="text-gray-500 text-[9px] sm:text-[10px] md:text-xs lg:text-xs leading-none mt-0.5">Students</span>
       </div>
       
-      <div className="w-px h-6 sm:h-7 md:h-8 lg:h-10 bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
+      <div className="w-px h-8 sm:h-10 md:h-12 lg:h-14 bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
       
       <div className="flex flex-col items-center flex-1">
         <GraduationCap className="text-amber-500 w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-4 lg:h-4 mb-0.5" />
-        <span className="text-gray-800 font-bold text-[10px] sm:text-xs md:text-sm lg:text-sm leading-none">{countryCount}</span>
-        <span className="text-gray-500 text-[8px] sm:text-[9px] md:text-[10px] lg:text-xs leading-none mt-0.5">Countries</span>
+        <span className="text-gray-800 font-bold text-xs sm:text-sm md:text-sm lg:text-base leading-none">{countryCount}</span>
+        <span className="text-gray-500 text-[9px] sm:text-[10px] md:text-xs lg:text-xs leading-none mt-0.5">Countries</span>
       </div>
     </motion.div>
   );
@@ -282,7 +283,7 @@ export const HeroCard = () => {
 
             <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] relative">
               <WorldMap dots={connectionDots} lineColor="#3B82F6" />
-              {/* Stats card with simple CSS positioning */}
+              {/* Stats card with responsive positioning */}
               <StatsCard 
                 studentCount="500+" 
                 countryCount="15+" 

@@ -22,7 +22,7 @@ export default function TestimonialsCard() {
       instagramUrl: "https://www.instagram.com/p/DI6tN_7IwwF/?utm_source=ig_web_copy_link&igsh=MTMwNGRyZGE2Znloeg=="
     },
     {
-      quote: "I struggled to connect my passion for the environment with my fascination for physics. College Crafters helped me tie these themes together in a way that felt natural and compelling. Their guidance highlighted my unique interests while staying true to who I am.",
+      quote: "I came in with big goals but wasn’t sure how to bring everything together. QCC helped me craft essays that truly reflected who I am — from research to extracurriculars. Their feedback was always thoughtful and sharp, and their support kept me grounded through the most stressful parts of the process. They also constantly kept me updated about scholarship opportunities around the world, which helped me stay ahead and focused.",
       name: "Maaz Habib",
       designation: "University College London",
       src: "/maaz.jpeg",
@@ -319,32 +319,25 @@ export default function TestimonialsCard() {
         </div>
 
         {/* Bottom decorative text */}
-        <div className="flex justify-center items-center gap-3 text-base mt-12">
-          {['✦', 'Success', 'Stories', 'That', 'Inspire', '✦'].map((word, index) => (
-            <span
-              key={index}
-              className="text-gray-500 cursor-default transition-all duration-300 hover:text-gray-700 font-light tracking-wider"
-              style={{
-                fontSize: word === '✦' ? '1.1rem' : '0.95rem'
-              }}
-              onMouseEnter={(e) => {
-                if (word === '✦') {
-                  e.currentTarget.style.transform = 'translateY(-2px) scale(1.2)';
-                  e.currentTarget.style.color = '#f59e0b';
-                } else {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.color = '#3b82f6';
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                e.currentTarget.style.color = '#6b7280';
-              }}
-            >
-              {word}
-            </span>
-          ))}
-        </div>
+        
+      <div className="mt-16 w-full flex justify-center gap-2 text-sm">
+               {['✦', 'success', 'stories', 'that', 'inspire', '✦'].map((word, index) => (
+                 <motion.span
+                   key={index}
+                   className="opacity-70 text-gray-600 cursor-default"
+                   whileHover={{
+                     opacity: 1,
+                     y: -5,
+                     rotate: index % 2 === 0 ? 15 : -15,
+                     color: '#F59E0B',
+                     scale: 1.2
+                   }}
+                   transition={{ type: 'spring', stiffness: 300 }}
+                 >
+                   {word}
+                 </motion.span>
+               ))}
+             </div>
       </div>
 
       <style>{`
