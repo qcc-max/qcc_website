@@ -218,7 +218,7 @@ export const Navbar = () => {
         
         <div className="flex flex-col h-full">
           {/* Mobile menu header with improved styling */}
-          <div className="flex justify-between items-center p-4 sm:p-6 border-b border-blue-100 bg-white relative z-10">
+          <div className="flex justify-between items-center p-4 sm:p-6 border-b border-blue-100 bg-stone-100 relative z-10">
             {/* Improved mobile logo container with background */}
             <div
               className="flex items-center h-10 sm:h-12 bg-stone-100 rounded-lg"
@@ -236,7 +236,7 @@ export const Navbar = () => {
             </div>
             
             <button
-              className="text-amber-600 hover:text-blue-600 transition-all duration-300 p-2 hover:rotate-90 bg-white rounded-full"
+              className="text-amber-600 hover:text-blue-600 transition-all duration-300 p-2 hover:rotate-90 bg-stone-100 rounded-full"
               onClick={() => setIsMobileMenuOpen(false)}
               aria-label="Close menu"
             >
