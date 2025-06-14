@@ -191,7 +191,7 @@ We believe ambition should never be limited by access. At QCC, we are here to he
       <div className="mt-12 flex flex-col items-center">
         <h4 className="text-sm font-medium text-gray-500 mb-4 tracking-wide">We serve students from around the world</h4>
         <div className="flex flex-wrap justify-center gap-3 text-xs">
-          {['US', 'UK', 'UAE', 'Pakistan', 'Canada', 'China', 'Afghanistan', 'Australia'].map((country, index) => (
+          {['US', 'UK', 'UAE', 'Pakistan', 'Canada', 'China', 'Afghanistan', 'Singapore', 'Hong Kong', 'Germany', 'Australia'].map((country, index) => (
             <div
               key={index}
               className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/80 backdrop-blur-sm hover:bg-blue-50 hover:text-blue-600 hover:scale-105 transition-all duration-300 border border-gray-200/60 shadow-sm font-medium"

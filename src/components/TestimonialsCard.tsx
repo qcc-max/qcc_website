@@ -14,7 +14,7 @@ export default function TestimonialsCard() {
 
   const testimonials = [
     {
-      quote: "I had no idea where to start with my college applications. College Crafters guided me step by step with my activities and essays, offering personalized support and a strong sense of community. Thanks to them, I felt confident showcasing my best self.",
+      quote: "I'm grateful I started working with QCC early, as it helped structure my entire college application process. They guided me in building a strong activity list, refining my Common App essay, and weaving my extracurriculars into a cohesive story. Their university selection advice was excellent, and they continued to support me through the visa process. Their expertise truly made a difference.",
       name: "Muhammed Umer Bhatti",
       designation: "University of Miami",
       src: "/Umer.jpeg",

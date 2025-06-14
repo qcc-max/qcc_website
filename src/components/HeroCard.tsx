@@ -99,45 +99,33 @@ const WorldMap = ({
   );
 };
 
-// Fixed StatsCard Component with responsive positioning
+// Enhanced Responsive StatsCard Component
 const StatsCard = ({ 
   studentCount = '500+', 
   countryCount = '15+',
 }) => {
   return (
     <motion.div
-      className="absolute bg-white/90 backdrop-blur-lg rounded-xl shadow-xl border border-white/30 flex items-center gap-2 z-20
-                 // Responsive sizing and positioning
-                 p-2 text-xs w-32 h-14
-                 sm:p-2.5 sm:text-sm sm:w-36 sm:h-16
-                 md:p-3 md:text-sm md:w-40 md:h-18
-                 lg:p-3 lg:text-base lg:w-44 lg:h-20
-                 hover:shadow-2xl hover:bg-white/95 transition-all duration-300
-                 // Mobile: Bottom right corner
-                 bottom-4 left-4
-                 // Small screens: Move to different position
-                 sm:bottom-8 sm:right-8
-                 // Medium screens: Center-right area
-                 md:top-3/4 md:left-3/5 md:right-auto md:transform md:-translate-y-1/2
-                 // Large screens: Original Indian Ocean position
-                 lg:top-3/4 lg:left-3/5 lg:right-auto lg:transform lg:-translate-x-1/2 lg:-translate-y-1/2"
+      className="bg-white/90 backdrop-blur-lg rounded-xl shadow-xl border border-white/30 flex items-center gap-2 sm:gap-4 z-20
+                 p-2 sm:p-4 hover:shadow-2xl hover:bg-white/95 transition-all duration-300
+                 w-fit mx-auto text-center"
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: 1 }}
       whileHover={{ scale: 1.05 }}
     >
-      <div className="flex flex-col items-center flex-1">
-        <Users className="text-blue-500 w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-4 lg:h-4 mb-0.5" />
-        <span className="text-gray-800 font-bold text-xs sm:text-sm md:text-sm lg:text-base leading-none">{studentCount}</span>
-        <span className="text-gray-500 text-[9px] sm:text-[10px] md:text-xs lg:text-xs leading-none mt-0.5">Students</span>
+      <div className="flex flex-col items-center">
+        <Users className="text-blue-500 w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1" />
+        <span className="text-gray-800 font-bold text-sm sm:text-lg leading-none">{studentCount}</span>
+        <span className="text-gray-500 text-xs sm:text-sm leading-none mt-0.5 sm:mt-1">Students</span>
       </div>
       
-      <div className="w-px h-8 sm:h-10 md:h-12 lg:h-14 bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
+      <div className="w-px h-8 sm:h-12 bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
       
-      <div className="flex flex-col items-center flex-1">
-        <GraduationCap className="text-amber-500 w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-4 lg:h-4 mb-0.5" />
-        <span className="text-gray-800 font-bold text-xs sm:text-sm md:text-sm lg:text-base leading-none">{countryCount}</span>
-        <span className="text-gray-500 text-[9px] sm:text-[10px] md:text-xs lg:text-xs leading-none mt-0.5">Countries</span>
+      <div className="flex flex-col items-center">
+        <GraduationCap className="text-amber-500 w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1" />
+        <span className="text-gray-800 font-bold text-sm sm:text-lg leading-none">{countryCount}</span>
+        <span className="text-gray-500 text-xs sm:text-sm leading-none mt-0.5 sm:mt-1">Countries</span>
       </div>
     </motion.div>
   );
@@ -269,26 +257,27 @@ export const HeroCard = () => {
 
         {/* World Map Section */}
         <motion.div
-          className="mt-12 w-full max-w-5xl"
+          className="mt-8 sm:mt-12 w-full max-w-5xl"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.4 }}
           viewport={{ once: true }}
         >
           <div className="flex flex-col items-center">
-            <h3 className="text-gray-800 text-base font-medium flex items-center gap-2 mb-4">
-              <GraduationCap size={18} className="text-amber-500" />
+            <h3 className="text-gray-800 text-sm sm:text-base font-medium flex items-center gap-2 mb-3 sm:mb-4">
+              <GraduationCap size={16} className="text-amber-500 sm:w-[18px] sm:h-[18px]" />
               Our Global Student Network
             </h3>
 
-            <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] relative">
+            <div className="w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[450px] relative mb-4 sm:mb-6">
               <WorldMap dots={connectionDots} lineColor="#3B82F6" />
-              {/* Stats card with responsive positioning */}
-              <StatsCard 
-                studentCount="500+" 
-                countryCount="15+" 
-              />
             </div>
+
+            {/* Enhanced responsive stats card */}
+            <StatsCard 
+              studentCount="500+" 
+              countryCount="15+" 
+            />
           </div>
         </motion.div>
       </div>
