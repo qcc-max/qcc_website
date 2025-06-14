@@ -40,7 +40,7 @@ export default function StatsCard() {
      const windowHeight = window.innerHeight;
     
      // Calculate trigger point - only update once when crossing threshold
-     if (rect.top < windowHeight * 0.3 && !scrollRef.statsActive) {
+     if (rect.top < windowHeight * 0.2 && !scrollRef.statsActive) {
        scrollRef.statsActive = true;
        setAllStatsActive(true);
      } else if (rect.top > windowHeight * 0.8 && scrollRef.statsActive) {
@@ -140,7 +140,7 @@ export default function StatsCard() {
    },
    {
      icon: BookOpen,
-     value: "2+",
+     value: "3+",
      label: "Years of Experience",
      color: "text-blue-600",
      finalPosition: { x: 220, y: 160 }
