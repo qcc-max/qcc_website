@@ -104,7 +104,7 @@ const sectionRef = useRef<HTMLElement | null>(null);
       {/* Subtitle */}
       <div className="flex justify-center mb-12">
         <p className="text-gray-600 max-w-2xl text-center font-light text-lg leading-relaxed">
-          We're not just consultants — we're former applicants who have been in your shoes and succeeded.
+          We’re not just consultants. We’re former applicants who’ve been through the same journey and succeeded.
           <br />
           <span className="text-blue-600 font-medium">Our passion is helping you achieve your academic dreams.</span>
         </p>
