@@ -13,10 +13,20 @@ import {
  ArrowRight,
  Check,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+
+// Define a type for the service data
+type ServiceData = {
+  id: number;
+  title: string;
+  icon: React.ComponentType<{ size?: string | number; className?: string }>;
+  description: string;
+  color: 'blue' | 'amber';
+  features: string[];
+};
+
 
 // Memoized services data to prevent recreation on every render
-const SERVICES_DATA = [
+const SERVICES_DATA: readonly ServiceData[] = [
   {
     id: 1,
     title: "Application Strategy",
@@ -75,7 +85,7 @@ const SERVICES_DATA = [
   },
 ] as const;
 
-// Memoized CSS styles to prevent recreation
+// Extract CSS to avoid inline styles and reduce DOM manipulation
 const CSS_STYLES = `
   .scale-101 {
     transform: scale(1.01);
@@ -149,17 +159,290 @@ const CSS_STYLES = `
   .animate-pulse-fast {
     animation: pulse-fast 3s ease-in-out infinite;
   }
+
+  .services-bg-gradient {
+    background: radial-gradient(circle 250px at var(--mouse-x) var(--mouse-y), rgba(59, 130, 246, 0.1), transparent);
+  }
 `;
 
+// Memoized floating elements component
+const FloatingElements = React.memo(() => (
+  <>
+    <div className="hidden xl:block absolute top-1/4 left-[5%] animate-float-slow opacity-10">
+      <PenTool size={40} className="text-blue-600" />
+    </div>
+    <div className="hidden xl:block absolute top-1/4 right-[5%] animate-float-medium opacity-10">
+      <Star size={32} className="text-amber-600" />
+    </div>
+    <div className="hidden xl:block absolute bottom-1/4 left-[5%] animate-float opacity-10">
+      <Award size={36} className="text-blue-600" />
+    </div>
+    <div className="hidden xl:block absolute bottom-1/4 right-[5%] animate-float-slow opacity-10">
+      <BookMarked size={32} className="text-amber-600" />
+    </div>
+  </>
+));
+
+// Memoized service navigation item
+const ServiceNavItem = React.memo(({ 
+  service, 
+  index, 
+  isActive, 
+  isVisible, 
+  onSelect 
+}: {
+  service: typeof SERVICES_DATA[0];
+  index: number;
+  isActive: boolean;
+  isVisible: boolean;
+  onSelect: (id: number) => void;
+}) => {
+  const ServiceIcon = service.icon;
+  
+  const handleClick = useCallback(() => {
+    onSelect(service.id);
+  }, [onSelect, service.id]);
+
+  const itemStyle = useMemo(() => ({
+    opacity: isVisible ? 1 : 0,
+    transform: `translateX(${isVisible ? 0 : -20}px) ${isActive ? 'scale(1.02)' : 'scale(1)'}`,
+    transitionDelay: `${index * 0.08}s`
+  }), [isVisible, isActive, index]);
+
+  return (
+    <div
+      className={`
+        cursor-pointer p-3 rounded-xl border transition-all duration-300 transform will-change-transform
+        ${isActive
+          ? service.color === 'blue'
+            ? 'bg-blue-50 border-blue-200 shadow-md scale-102'
+            : 'bg-amber-50 border-amber-200 shadow-md scale-102'
+          : 'bg-white/80 border-gray-200 hover:border-gray-300 hover:shadow-sm hover:scale-101'
+        }
+      `}
+      style={itemStyle}
+      onClick={handleClick}
+    >
+      <div className="flex items-center space-x-3">
+        {/* Service Number */}
+        <div
+          className={`
+            w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0
+            ${isActive
+              ? service.color === 'blue'
+                ? 'bg-blue-500 text-white shadow-blue-500/30'
+                : 'bg-amber-500 text-white shadow-amber-500/30'
+              : 'bg-gray-100 text-gray-600'
+            }
+            transition-all duration-300 shadow-md
+          `}
+        >
+          {String(service.id).padStart(2, '0')}
+        </div>
+
+        {/* Service Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center space-x-2 mb-1">
+            <ServiceIcon
+              size={14}
+              className={`
+                flex-shrink-0
+                ${isActive
+                  ? service.color === 'blue'
+                    ? 'text-blue-600'
+                    : 'text-amber-600'
+                  : 'text-gray-500'
+                }
+              `}
+            />
+            <h4
+              className={`
+                font-medium text-sm
+                ${isActive
+                  ? service.color === 'blue'
+                    ? 'text-blue-700'
+                    : 'text-amber-700'
+                  : 'text-gray-700'
+                }
+              `}
+            >
+              {service.title}
+            </h4>
+          </div>
+         
+          {/* Preview text for non-active services */}
+          {!isActive && (
+            <p className="text-xs text-gray-500 line-clamp-1 leading-relaxed">
+              {service.description.substring(0, 50)}...
+            </p>
+          )}
+        </div>
+
+        {/* Active indicator */}
+        <div className="flex-shrink-0">
+          {isActive ? (
+            <div
+              className={`
+                w-1 h-6 rounded-full
+                ${service.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500'}
+              `}
+            />
+          ) : (
+            <div className="w-1 h-6" />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// Memoized service content component
+const ServiceContent = React.memo(({ 
+  service, 
+  isHovered, 
+  isVisible, 
+  onHover, 
+  onGetStarted 
+}: {
+  service: typeof SERVICES_DATA[0];
+  isHovered: boolean;
+  isVisible: boolean;
+  onHover: (hovered: boolean) => void;
+  onGetStarted: () => void;
+}) => {
+  const ActiveIcon = service.icon;
+
+  const handleMouseEnter = useCallback(() => onHover(true), [onHover]);
+  const handleMouseLeave = useCallback(() => onHover(false), [onHover]);
+
+  const contentStyle = useMemo(() => ({
+    transform: isHovered ? 'scale(1.02)' : 'scale(1)',
+    transition: 'transform 0.3s ease',
+    opacity: isVisible ? 1 : 0,
+    transitionDelay: '0.2s'
+  }), [isHovered, isVisible]);
+
+  return (
+    <div
+      className="rounded-[48px] p-2.5 bg-gradient-to-br from-blue-100 via-blue-50 to-amber-50 backdrop-blur-sm shadow-lg will-change-transform"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      style={contentStyle}
+    >
+      <div className="relative bg-white rounded-[38px] p-8 shadow-xl border border-blue-200 overflow-hidden">
+        {/* Animated background glow effect */}
+        <div className="absolute inset-0 opacity-40">
+          <div
+            className={`absolute w-1/2 h-1/2 bg-blue-100 rounded-full blur-3xl ${isHovered ? 'animate-pulse-fast' : 'animate-pulse'}`}
+            style={{ top: '15%', left: '5%' }}
+          />
+          <div
+            className={`absolute w-1/3 h-1/3 bg-amber-100 rounded-full blur-3xl ${isHovered ? 'animate-pulse-fast' : 'animate-pulse'}`}
+            style={{ bottom: '15%', right: '10%' }}
+          />
+        </div>
+
+        <div className="relative z-10">
+          {/* Icon and Title */}
+          <div className="flex items-start space-x-4 mb-5">
+            <div
+              className={`
+                w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0
+                ${service.color === 'blue'
+                  ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue-500/30'
+                  : 'bg-gradient-to-br from-amber-500 to-amber-600 shadow-amber-500/30'
+                }
+              `}
+            >
+              <ActiveIcon size={24} className="text-white" />
+            </div>
+           
+            <div className="flex-1 min-w-0">
+              <h3 className="text-2xl lg:text-3xl font-light text-gray-800 mb-2 leading-tight">
+                {service.title}
+              </h3>
+              <div className="flex items-center space-x-3">
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Service</span>
+                <div
+                  className={`
+                    w-8 h-0.5 rounded-full
+                    ${service.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500'}
+                  `}
+                />
+                <span
+                  className={`
+                    text-xs font-bold px-2 py-1 rounded-full
+                    ${service.color === 'blue'
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-amber-600 bg-amber-50'
+                    }
+                  `}
+                >
+                  {String(service.id).padStart(2, '0')}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Description in styled container */}
+          <div className="bg-gray-50/80 rounded-3xl p-6 mb-6 border border-gray-100/50">
+            <p className="text-gray-700 text-base leading-relaxed font-light">
+              {service.description}
+            </p>
+          </div>
+
+          {/* Features Grid */}
+          <div className="mb-6">
+            <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Key Features</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {service.features.map((feature, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <Check
+                    size={14}
+                    className={`
+                      flex-shrink-0
+                      ${service.color === 'blue' ? 'text-blue-500' : 'text-amber-500'}
+                    `}
+                  />
+                  <span className="text-sm text-gray-600 font-medium">{feature}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Call to action */}
+          <div className="pt-5 border-t border-gray-100">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={onGetStarted}
+                className={`
+                  px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 flex-1 sm:flex-initial flex items-center justify-center space-x-2 will-change-transform
+                  ${service.color === 'blue'
+                    ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-blue-500/25'
+                    : 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/25'
+                  }
+                  shadow-lg hover:shadow-xl transform hover:-translate-y-1
+                `}
+              >
+                <span>Get Started</span>
+                <ArrowRight size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
+
 export default function ServicesCard() {
-  const navigate = useNavigate();
   const [activeService, setActiveService] = useState(1);
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const sectionRef = useRef<HTMLElement | null>(null);
 
-  // Memoized callback to prevent recreation on every render
+  // Throttled mouse move handler to reduce main thread work
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLElement>) => {
     if (sectionRef.current) {
       const rect = sectionRef.current.getBoundingClientRect();
@@ -172,12 +455,17 @@ export default function ServicesCard() {
 
   // Memoized callback for navigation
   const handleGetStarted = useCallback(() => {
-    navigate('/book');
-  }, [navigate]);
+    console.log('Get Started clicked'); // Replace with actual navigation
+  }, []);
 
   // Memoized callback for service selection
   const handleServiceSelect = useCallback((serviceId: number) => {
     setActiveService(serviceId);
+  }, []);
+
+  // Memoized callback for hover state
+  const handleHover = useCallback((hovered: boolean) => {
+    setIsHovered(hovered);
   }, []);
 
   useEffect(() => {
@@ -213,11 +501,10 @@ export default function ServicesCard() {
     [activeService]
   );
 
-  const ActiveIcon = activeServiceData?.icon;
-
-  // Memoized mouse position style
-  const mousePositionStyle = useMemo(() => ({
-    background: `radial-gradient(circle 250px at ${mousePosition.x}px ${mousePosition.y}px, rgba(59, 130, 246, 0.1), transparent)`
+  // Memoized CSS custom properties for mouse position
+  const sectionStyle = useMemo(() => ({
+    '--mouse-x': `${mousePosition.x}px`,
+    '--mouse-y': `${mousePosition.y}px`
   }), [mousePosition.x, mousePosition.y]);
 
   return (
@@ -226,6 +513,7 @@ export default function ServicesCard() {
       ref={sectionRef}
       className="py-12 px-4 sm:px-6 bg-stone-100 relative overflow-hidden will-change-transform"
       onMouseMove={handleMouseMove}
+      style={sectionStyle as React.CSSProperties}
     >
       {/* Background Elements */}
       <div
@@ -237,25 +525,11 @@ export default function ServicesCard() {
         style={{ animationDuration: '22s' }}
       />
      
-      {/* Interactive background */}
-      <div
-        className="absolute inset-0 opacity-15 pointer-events-none transition-opacity duration-1000"
-        style={mousePositionStyle}
-      />
+      {/* Interactive background using CSS custom properties */}
+      <div className="absolute inset-0 opacity-15 pointer-events-none transition-opacity duration-1000 services-bg-gradient" />
 
-      {/* Floating elements - Only render on larger screens to reduce DOM complexity */}
-      <div className="hidden xl:block absolute top-1/4 left-[5%] animate-float-slow opacity-10">
-        <PenTool size={40} className="text-blue-600" />
-      </div>
-      <div className="hidden xl:block absolute top-1/4 right-[5%] animate-float-medium opacity-10">
-        <Star size={32} className="text-amber-600" />
-      </div>
-      <div className="hidden xl:block absolute bottom-1/4 left-[5%] animate-float opacity-10">
-        <Award size={36} className="text-blue-600" />
-      </div>
-      <div className="hidden xl:block absolute bottom-1/4 right-[5%] animate-float-slow opacity-10">
-        <BookMarked size={32} className="text-amber-600" />
-      </div>
+      {/* Floating elements */}
+      <FloatingElements />
 
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
@@ -291,101 +565,16 @@ export default function ServicesCard() {
           <div className="order-2 lg:order-1">
             <div className="sticky top-6">
               <div className="space-y-2">
-                {SERVICES_DATA.map((service, index) => {
-                  const ServiceIcon = service.icon;
-                  const isActive = activeService === service.id;
-                  
-                  return (
-                    <div
-                      key={service.id}
-                      className={`
-                        cursor-pointer p-3 rounded-xl border transition-all duration-300 transform will-change-transform
-                        ${isActive
-                          ? service.color === 'blue'
-                            ? 'bg-blue-50 border-blue-200 shadow-md scale-102'
-                            : 'bg-amber-50 border-amber-200 shadow-md scale-102'
-                          : 'bg-white/80 border-gray-200 hover:border-gray-300 hover:shadow-sm hover:scale-101'
-                        }
-                      `}
-                      style={{
-                        opacity: isVisible ? 1 : 0,
-                        transform: `translateX(${isVisible ? 0 : -20}px) ${isActive ? 'scale(1.02)' : 'scale(1)'}`,
-                        transitionDelay: `${index * 0.08}s`
-                      }}
-                      onClick={() => handleServiceSelect(service.id)}
-                    >
-                      <div className="flex items-center space-x-3">
-                        {/* Service Number */}
-                        <div
-                          className={`
-                            w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0
-                            ${isActive
-                              ? service.color === 'blue'
-                                ? 'bg-blue-500 text-white shadow-blue-500/30'
-                                : 'bg-amber-500 text-white shadow-amber-500/30'
-                              : 'bg-gray-100 text-gray-600'
-                            }
-                            transition-all duration-300 shadow-md
-                          `}
-                        >
-                          {String(service.id).padStart(2, '0')}
-                        </div>
-
-                        {/* Service Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <ServiceIcon
-                              size={14}
-                              className={`
-                                flex-shrink-0
-                                ${isActive
-                                  ? service.color === 'blue'
-                                    ? 'text-blue-600'
-                                    : 'text-amber-600'
-                                  : 'text-gray-500'
-                                }
-                              `}
-                            />
-                            <h4
-                              className={`
-                                font-medium text-sm
-                                ${isActive
-                                  ? service.color === 'blue'
-                                    ? 'text-blue-700'
-                                    : 'text-amber-700'
-                                  : 'text-gray-700'
-                                }
-                              `}
-                            >
-                              {service.title}
-                            </h4>
-                          </div>
-                         
-                          {/* Preview text for non-active services */}
-                          {!isActive && (
-                            <p className="text-xs text-gray-500 line-clamp-1 leading-relaxed">
-                              {service.description.substring(0, 50)}...
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Active indicator */}
-                        <div className="flex-shrink-0">
-                          {isActive ? (
-                            <div
-                              className={`
-                                w-1 h-6 rounded-full
-                                ${service.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500'}
-                              `}
-                            />
-                          ) : (
-                            <div className="w-1 h-6" />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {SERVICES_DATA.map((service, index) => (
+                  <ServiceNavItem
+                    key={service.id}
+                    service={service}
+                    index={index}
+                    isActive={activeService === service.id}
+                    isVisible={isVisible}
+                    onSelect={handleServiceSelect}
+                  />
+                ))}
               </div>
             </div>
           </div>
@@ -393,123 +582,14 @@ export default function ServicesCard() {
           {/* Active Service Content - Right Side */}
           <div className="order-1 lg:order-2">
             {activeServiceData && (
-              <div
+              <ServiceContent
                 key={activeService}
-                className="rounded-[48px] p-2.5 bg-gradient-to-br from-blue-100 via-blue-50 to-amber-50 backdrop-blur-sm shadow-lg will-change-transform"
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-                style={{
-                  transform: isHovered ? 'scale(1.02)' : 'scale(1)',
-                  transition: 'transform 0.3s ease',
-                  opacity: isVisible ? 1 : 0,
-                  transitionDelay: '0.2s'
-                }}
-              >
-                <div className="relative bg-white rounded-[38px] p-8 shadow-xl border border-blue-200 overflow-hidden">
-                  {/* Animated background glow effect */}
-                  <div className="absolute inset-0 opacity-40">
-                    <div
-                      className={`absolute w-1/2 h-1/2 bg-blue-100 rounded-full blur-3xl ${isHovered ? 'animate-pulse-fast' : 'animate-pulse'}`}
-                      style={{ top: '15%', left: '5%' }}
-                    />
-                    <div
-                      className={`absolute w-1/3 h-1/3 bg-amber-100 rounded-full blur-3xl ${isHovered ? 'animate-pulse-fast' : 'animate-pulse'}`}
-                      style={{ bottom: '15%', right: '10%' }}
-                    />
-                  </div>
-
-                  <div className="relative z-10">
-                    {/* Icon and Title */}
-                    <div className="flex items-start space-x-4 mb-5">
-                      <div
-                        className={`
-                          w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0
-                          ${activeServiceData.color === 'blue'
-                            ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue-500/30'
-                            : 'bg-gradient-to-br from-amber-500 to-amber-600 shadow-amber-500/30'
-                          }
-                        `}
-                      >
-                        {ActiveIcon && (
-                          <ActiveIcon size={24} className="text-white" />
-                        )}
-                      </div>
-                     
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-2xl lg:text-3xl font-light text-gray-800 mb-2 leading-tight">
-                          {activeServiceData.title}
-                        </h3>
-                        <div className="flex items-center space-x-3">
-                          <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Service</span>
-                          <div
-                            className={`
-                              w-8 h-0.5 rounded-full
-                              ${activeServiceData.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500'}
-                            `}
-                          />
-                          <span
-                            className={`
-                              text-xs font-bold px-2 py-1 rounded-full
-                              ${activeServiceData.color === 'blue'
-                                ? 'text-blue-600 bg-blue-50'
-                                : 'text-amber-600 bg-amber-50'
-                              }
-                            `}
-                          >
-                            {String(activeServiceData.id).padStart(2, '0')}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Description in styled container */}
-                    <div className="bg-gray-50/80 rounded-3xl p-6 mb-6 border border-gray-100/50">
-                      <p className="text-gray-700 text-base leading-relaxed font-light">
-                        {activeServiceData.description}
-                      </p>
-                    </div>
-
-                    {/* Features Grid */}
-                    <div className="mb-6">
-                      <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Key Features</h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {activeServiceData.features.map((feature, index) => (
-                          <div key={index} className="flex items-center space-x-2">
-                            <Check
-                              size={14}
-                              className={`
-                                flex-shrink-0
-                                ${activeServiceData.color === 'blue' ? 'text-blue-500' : 'text-amber-500'}
-                              `}
-                            />
-                            <span className="text-sm text-gray-600 font-medium">{feature}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Call to action */}
-                    <div className="pt-5 border-t border-gray-100">
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <button
-                          onClick={handleGetStarted}
-                          className={`
-                            px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 flex-1 sm:flex-initial flex items-center justify-center space-x-2 will-change-transform
-                            ${activeServiceData.color === 'blue'
-                              ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-blue-500/25'
-                              : 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/25'
-                            }
-                            shadow-lg hover:shadow-xl transform hover:-translate-y-1
-                          `}
-                        >
-                          <span>Get Started</span>
-                          <ArrowRight size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                service={activeServiceData}
+                isHovered={isHovered}
+                isVisible={isVisible}
+                onHover={handleHover}
+                onGetStarted={handleGetStarted}
+              />
             )}
           </div>
         </div>

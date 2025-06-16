@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { motion } from 'framer-motion';
 import { GraduationCap, Users } from 'lucide-react';
-import { memo, useMemo, useCallback } from 'react';
+import { memo, useMemo, useCallback, useRef, useEffect, useState } from 'react';
 import DottedMap from 'dotted-map';
 
 // Types
@@ -18,14 +18,72 @@ type WorldMapProps = {
   dotOpacity?: number;
 };
 
-// Memoized WorldMap Component with optimizations
+// Pre-calculate static data outside component
+const STATIC_CONNECTION_DOTS = [
+  { start: { lat: 64.2008, lng: -149.4937 }, end: { lat: 35.0522, lng: -100.2437 } },
+  { start: { lat: 64.2008, lng: -149.4937 }, end: { lat: -25, lng: -55.8919 } },
+  { start: { lat: -25, lng: -55.8919 }, end: { lat: 34.5553, lng: 69.2075 } },
+  { start: { lat: 47.5074, lng: -1.1278 }, end: { lat: 43.6532, lng: -100.3832 } },
+  { start: { lat: 31.5497, lng: 74.3436 }, end: { lat: 43.1332, lng: 131.9113 } },
+  { start: { lat: 31.5497, lng: 74.3436 }, end: { lat: -1.2921, lng: 30.8219 } },
+  { start: { lat: -45, lng: 143.2093 }, end: { lat: 31.5497, lng: 74.3436 } },
+  { start: { lat: 34.5553, lng: 69.2075 }, end: { lat: 39.9334, lng: 32.8597 } },
+  { start: { lat: 31.3891, lng: 120.9853 }, end: { lat: 39.9334, lng: 32.8597 } },
+  { start: { lat: 43.6532, lng: -70.3832 }, end: { lat: -45, lng: 143.2093 } },
+  { start: { lat: 55.52, lng: 13.405 }, end: { lat: 31.5497, lng: 74.3436 } },
+  { start: { lat: 31.3891, lng: 120.9853 }, end: { lat: -45, lng: 143.2093 } },
+  { start: { lat: 39.9334, lng: 32.8597 }, end: { lat: 47.5074, lng: -1.1278 } },
+];
+
+const STATIC_DECORATIVE_ITEMS = ['✦', 'your', 'path', 'to', 'success', '✦'];
+
+const STATIC_BACKGROUND_ACCENTS = [
+  { top: '250%', right: '-5%', width: '60%', height: '40%', color: 'amber', delay: 15 },
+  { top: '38%', right: '20%', width: '50%', height: '50%', color: 'amber', delay: 22 },
+  { bottom: '10%', left: '-10%', width: '75%', height: '33%', color: 'blue', delay: 22 },
+  { top: '-20%', right: '-20%', width: '75%', height: '75%', color: 'blue', delay: 15 },
+  { bottom: '20%', left: '-10%', width: '60%', height: '40%', color: 'amber', delay: 20 },
+];
+
+// Cache for expensive computations
+const mapCache = new Map();
+
+// Optimized WorldMap Component with lazy loading and reduced re-renders
 const WorldMap = memo(({
   dots = [],
   lineColor = "#0ea5e9",
   dotColor = "#374151",
   dotOpacity = 0.4,
 }: WorldMapProps) => {
-  const { svgMap, projectPoint, createCurvedPath } = useMemo(() => {
+  const [isVisible, setIsVisible] = useState(false);
+  const observerRef = useRef<HTMLDivElement>(null);
+
+  // Intersection observer for lazy loading
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerRef.current) {
+      observer.observe(observerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  const { svgMap, processedDots } = useMemo(() => {
+    const cacheKey = `${dotColor}-${JSON.stringify(dots)}`;
+    
+    if (mapCache.has(cacheKey)) {
+      return mapCache.get(cacheKey);
+    }
+
     const map = new DottedMap({ height: 100, grid: "diagonal" });
     const svgMap = map.getSVG({
       radius: 0.22,
@@ -44,152 +102,191 @@ const WorldMap = memo(({
       return `M ${start.x} ${start.y} Q ${(start.x + end.x) / 2} ${midY} ${end.x} ${end.y}`;
     };
 
-    return { svgMap, projectPoint, createCurvedPath };
-  }, [dotColor]);
+    const processedDots = dots.map((dot, i) => {
+      const start = projectPoint(dot.start.lat, dot.start.lng);
+      const end = projectPoint(dot.end.lat, dot.end.lng);
+      return { start, end, path: createCurvedPath(start, end), index: i };
+    });
+
+    const result = { svgMap, processedDots };
+    mapCache.set(cacheKey, result);
+    return result;
+  }, [dotColor, dots]);
 
   const dataUri = useMemo(() => 
     `data:image/svg+xml;utf8,${encodeURIComponent(svgMap)}`, 
     [svgMap]
   );
 
-  const processedDots = useMemo(() => 
-    dots.map((dot, i) => {
-      const start = projectPoint(dot.start.lat, dot.start.lng);
-      const end = projectPoint(dot.end.lat, dot.end.lng);
-      return { start, end, path: createCurvedPath(start, end), index: i };
-    }), 
-    [dots, projectPoint, createCurvedPath]
-  );
-
   return (
-    <div className="w-full aspect-[2/1] relative">
-      <img
-        src={dataUri}
-        className="h-full w-full [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] pointer-events-none select-none"
-        style={{ opacity: dotOpacity }}
-        alt="world map"
-        draggable={false}
-        loading="eager"
-      />
-      
-      <svg
-        viewBox="0 0 800 400"
-        className="w-full h-full absolute inset-0 pointer-events-none select-none"
-      >
-        <defs>
-          <linearGradient id="path-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="white" stopOpacity="0" />
-            <stop offset="5%" stopColor={lineColor} stopOpacity="1" />
-            <stop offset="95%" stopColor={lineColor} stopOpacity="1" />
-            <stop offset="100%" stopColor="white" stopOpacity="0" />
-          </linearGradient>
-        </defs>
+    <div ref={observerRef} className="w-full aspect-[2/1] relative">
+      {isVisible ? (
+        <>
+          <img
+            src={dataUri}
+            className="h-full w-full [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] pointer-events-none select-none"
+            style={{ opacity: dotOpacity }}
+            alt="world map"
+            draggable={false}
+            loading="lazy"
+            decoding="async"
+          />
+          
+          <svg
+            viewBox="0 0 800 400"
+            className="w-full h-full absolute inset-0 pointer-events-none select-none"
+          >
+            <defs>
+              <linearGradient id="path-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="white" stopOpacity="0" />
+                <stop offset="5%" stopColor={lineColor} stopOpacity="1" />
+                <stop offset="95%" stopColor={lineColor} stopOpacity="1" />
+                <stop offset="100%" stopColor="white" stopOpacity="0" />
+              </linearGradient>
+            </defs>
 
-        {processedDots.map(({ start, end, path, index }) => (
-          <g key={`connection-${index}`}>
-            <motion.path
-              d={path}
-              fill="none"
-              stroke="url(#path-gradient)"
-              strokeWidth="1"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 1, delay: 0.2 * index, ease: "easeOut" }}
-            />
-            
-            {[start, end].map((point, j) => (
-              <g key={`point-${index}-${j}`}>
-                <circle cx={point.x} cy={point.y} r="2" fill={lineColor} />
-                <circle cx={point.x} cy={point.y} r="2" fill={lineColor} opacity="0.5">
-                  <animate attributeName="r" from="2" to="8" dur="1.5s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" from="0.5" to="0" dur="1.5s" repeatCount="indefinite" />
-                </circle>
-              </g>
-            ))}
-          </g>
-        ))}
-      </svg>
+            {processedDots.map(
+              (
+                {
+                  start,
+                  end,
+                  path,
+                  index,
+                }: {
+                  start: { x: number; y: number };
+                  end: { x: number; y: number };
+                  path: string;
+                  index: number;
+                }
+              ) => (
+                <g key={`connection-${index}`}>
+                  <motion.path
+                    d={path}
+                    fill="none"
+                    stroke="url(#path-gradient)"
+                    strokeWidth="1"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 1, delay: 0.2 * index, ease: "easeOut" }}
+                  />
+                  
+                  {[start, end].map((point, j) => (
+                    <g key={`point-${index}-${j}`}>
+                      <circle cx={point.x} cy={point.y} r="2" fill={lineColor} />
+                      <circle cx={point.x} cy={point.y} r="2" fill={lineColor} opacity="0.5">
+                        <animate attributeName="r" from="2" to="8" dur="1.5s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" from="0.5" to="0" dur="1.5s" repeatCount="indefinite" />
+                      </circle>
+                    </g>
+                  ))}
+                </g>
+              )
+            )}
+          </svg>
+        </>
+      ) : (
+        <div className="h-full w-full bg-gray-100 animate-pulse rounded-lg" />
+      )}
     </div>
   );
 });
 
 WorldMap.displayName = 'WorldMap';
 
-// Memoized StatsCard Component
+// Optimized StatsCard Component with reduced re-renders
 const StatsCard = memo(({ 
   studentCount = '500+', 
   countryCount = '15+',
 }: {
   studentCount?: string;
   countryCount?: string;
-}) => {
-  return (
-    <motion.div
-      className="bg-white/90 backdrop-blur-lg rounded-xl shadow-xl border border-white/30 flex items-center gap-2 sm:gap-4 z-20
-                 p-2 sm:p-4 hover:shadow-2xl hover:bg-white/95 transition-all duration-300
-                 w-fit mx-auto text-center"
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5, delay: 1 }}
-      whileHover={{ scale: 1.05 }}
-    >
-      <div className="flex flex-col items-center">
-        <Users className="text-blue-500 w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1" />
-        <span className="text-gray-800 font-bold text-sm sm:text-lg leading-none">{studentCount}</span>
-        <span className="text-gray-500 text-xs sm:text-sm leading-none mt-0.5 sm:mt-1">Students</span>
-      </div>
-      
-      <div className="w-px h-8 sm:h-12 bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
-      
-      <div className="flex flex-col items-center">
-        <GraduationCap className="text-amber-500 w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1" />
-        <span className="text-gray-800 font-bold text-sm sm:text-lg leading-none">{countryCount}</span>
-        <span className="text-gray-500 text-xs sm:text-sm leading-none mt-0.5 sm:mt-1">Countries</span>
-      </div>
-    </motion.div>
-  );
-});
+}) => (
+  <motion.div
+    className="bg-white/90 backdrop-blur-lg rounded-xl shadow-xl border border-white/30 flex items-center gap-2 sm:gap-4 z-20
+               p-2 sm:p-4 hover:shadow-2xl hover:bg-white/95 transition-all duration-300
+               w-fit mx-auto text-center"
+    initial={{ opacity: 0, scale: 0.8 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ duration: 0.5, delay: 1 }}
+    whileHover={{ scale: 1.05 }}
+  >
+    <div className="flex flex-col items-center">
+      <Users className="text-blue-500 w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1" />
+      <span className="text-gray-800 font-bold text-sm sm:text-lg leading-none">{studentCount}</span>
+      <span className="text-gray-500 text-xs sm:text-sm leading-none mt-0.5 sm:mt-1">Students</span>
+    </div>
+    
+    <div className="w-px h-8 sm:h-12 bg-gradient-to-b from-transparent via-gray-300 to-transparent" />
+    
+    <div className="flex flex-col items-center">
+      <GraduationCap className="text-amber-500 w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1" />
+      <span className="text-gray-800 font-bold text-sm sm:text-lg leading-none">{countryCount}</span>
+      <span className="text-gray-500 text-xs sm:text-sm leading-none mt-0.5 sm:mt-1">Countries</span>
+    </div>
+  </motion.div>
+));
 
 StatsCard.displayName = 'StatsCard';
 
-// Memoized background accent component
-const BackgroundAccents = memo(() => {
-  const accents = useMemo(() => [
-    { top: '250%', right: '-5%', width: '60%', height: '40%', color: 'amber', delay: 15 },
-    { top: '38%', right: '20%', width: '50%', height: '50%', color: 'amber', delay: 22 },
-    { bottom: '10%', left: '-10%', width: '75%', height: '33%', color: 'blue', delay: 22 },
-    { top: '-20%', right: '-20%', width: '75%', height: '75%', color: 'blue', delay: 15 },
-    { bottom: '20%', left: '-10%', width: '60%', height: '40%', color: 'amber', delay: 20 },
-  ], []);
-
-  return (
-    <>
-      {accents.map((bg, i) => (
-        <div
-          key={i}
-          className={`absolute rounded-full blur-3xl animate-pulse bg-${bg.color}-300/20`}
-          style={{
-            top: bg.top,
-            right: bg.right,
-            bottom: bg.bottom,
-            left: bg.left,
-            width: bg.width,
-            height: bg.height,
-            animationDuration: `${bg.delay}s`,
-            willChange: 'opacity'
-          }}
-        />
-      ))}
-    </>
-  );
-});
+// Optimized background accents with CSS animations instead of JS
+const BackgroundAccents = memo(() => (
+  <>
+    {STATIC_BACKGROUND_ACCENTS.map((bg, i) => (
+      <div
+        key={i}
+        className={`absolute rounded-full blur-3xl bg-${bg.color}-300/20`}
+        style={{
+          top: bg.top,
+          right: bg.right,
+          bottom: bg.bottom,
+          left: bg.left,
+          width: bg.width,
+          height: bg.height,
+          animation: `pulse ${bg.delay}s infinite`,
+        }}
+      />
+    ))}
+  </>
+));
 
 BackgroundAccents.displayName = 'BackgroundAccents';
 
-// Main HeroCard Component
+// Optimized decorative star animation
+const OptimizedStar = memo(() => {
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return <span>✦</span>;
+
+  return (
+    <motion.span
+      className="absolute -top-2 left-3 text-lg text-amber-500 not-italic"
+      animate={{
+        rotate: [0, 15, 0, -15, 0],
+        scale: [1, 1.2, 1, 1.2, 1]
+      }}
+      transition={{
+        duration: 5,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }}
+      style={{ transform: 'translateZ(0)' }} // Force GPU acceleration
+    >
+      ✦
+    </motion.span>
+  );
+});
+
+OptimizedStar.displayName = 'OptimizedStar';
+
+// Main HeroCard Component with optimizations
 export const HeroCard = memo(() => {
   const navigate = useNavigate();
 
+  // Stable callback references
   const handleStartJourney = useCallback(() => {
     navigate('/book');
   }, [navigate]);
@@ -197,27 +294,6 @@ export const HeroCard = memo(() => {
   const handleBookMeeting = useCallback(() => {
     navigate('/book');
   }, [navigate]);
-
-  const connectionDots = useMemo(() => [
-    { start: { lat: 64.2008, lng: -149.4937 }, end: { lat: 35.0522, lng: -100.2437 } },
-    { start: { lat: 64.2008, lng: -149.4937 }, end: { lat: -25, lng: -55.8919 } },
-    { start: { lat: -25, lng: -55.8919 }, end: { lat: 34.5553, lng: 69.2075 } },
-    { start: { lat: 47.5074, lng: -1.1278 }, end: { lat: 43.6532, lng: -100.3832 } },
-    { start: { lat: 31.5497, lng: 74.3436 }, end: { lat: 43.1332, lng: 131.9113 } },
-    { start: { lat: 31.5497, lng: 74.3436 }, end: { lat: -1.2921, lng: 30.8219 } },
-    { start: { lat: -45, lng: 143.2093 }, end: { lat: 31.5497, lng: 74.3436 } },
-    { start: { lat: 34.5553, lng: 69.2075 }, end: { lat: 39.9334, lng: 32.8597 } },
-    { start: { lat: 31.3891, lng: 120.9853 }, end: { lat: 39.9334, lng: 32.8597 } },
-    { start: { lat: 43.6532, lng: -70.3832 }, end: { lat: -45, lng: 143.2093 } },
-    { start: { lat: 55.52, lng: 13.405 }, end: { lat: 31.5497, lng: 74.3436 } },
-    { start: { lat: 31.3891, lng: 120.9853 }, end: { lat: -45, lng: 143.2093 } },
-    { start: { lat: 39.9334, lng: 32.8597 }, end: { lat: 47.5074, lng: -1.1278 } },
-  ], []);
-
-  const decorativeItems = useMemo(() => 
-    ['✦', 'your', 'path', 'to', 'success', '✦'], 
-    []
-  );
 
   return (
     <section id="home" className="min-h-screen w-full pt-20 pb-12 bg-stone-100 relative overflow-hidden">
@@ -238,21 +314,7 @@ export const HeroCard = memo(() => {
             </span>
             <span className="relative">
               !
-              <motion.span
-                className="absolute -top-2 left-3 text-lg text-amber-500 not-italic"
-                animate={{
-                  rotate: [0, 15, 0, -15, 0],
-                  scale: [1, 1.2, 1, 1.2, 1]
-                }}
-                transition={{
-                  duration: 5,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                style={{ willChange: 'transform' }}
-              >
-                ✦
-              </motion.span>
+              <OptimizedStar />
             </span>
           </h1>
 
@@ -260,7 +322,7 @@ export const HeroCard = memo(() => {
             Supporting students from{' '}
             <span className="text-amber-500 relative inline-block hover:rotate-3 transition-all cursor-default">
               every corner
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-amber-500/30"></span>
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-amber-500/30" />
             </span>{' '}
             of the world
           </p>
@@ -294,7 +356,7 @@ export const HeroCard = memo(() => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.7, delay: 0.5 }}
         >
-          {decorativeItems.map((item, i) => (
+          {STATIC_DECORATIVE_ITEMS.map((item, i) => (
             <span
               key={i}
               className="opacity-70 hover:opacity-100 hover:text-amber-500 hover:-translate-y-1 hover:rotate-3 transition-all cursor-default"
@@ -318,7 +380,7 @@ export const HeroCard = memo(() => {
             </h3>
 
             <div className="w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[450px] relative mb-4 sm:mb-6">
-              <WorldMap dots={connectionDots} lineColor="#3B82F6" />
+              <WorldMap dots={STATIC_CONNECTION_DOTS} lineColor="#3B82F6" />
             </div>
 
             <StatsCard 

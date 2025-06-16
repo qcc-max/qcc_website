@@ -8,12 +8,13 @@ export default function StatsCard() {
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
   const sectionRef = useRef<HTMLElement | null>(null);
   const scrollRef = useRef({ statsActive: false });
+  const animationFrameRef = useRef<number>();
 
-  // Optimized resize handler with better throttling
+  // More aggressive throttling for resize handler
   const handleResize = useCallback(
     _.throttle(() => {
       setWindowWidth(window.innerWidth);
-    }, 100),
+    }, 200), // Increased from 100ms to 200ms
     []
   );
 
@@ -27,43 +28,48 @@ export default function StatsCard() {
     };
   }, [handleResize]);
 
-  // Optimized scroll handler with RAF for better performance
-  const handleScroll = useCallback(
-    _.throttle(() => {
+  // Optimized scroll handler with better performance
+  const handleScroll = useCallback(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    
+    animationFrameRef.current = requestAnimationFrame(() => {
       if (!sectionRef.current) return;
       
-      requestAnimationFrame(() => {
-        const rect = sectionRef.current!.getBoundingClientRect();
-        const windowHeight = window.innerHeight;
-        
-        if (rect.top < windowHeight * 0.7 && !scrollRef.current.statsActive) {
-          scrollRef.current.statsActive = true;
-          setAllStatsActive(true);
-        } else if (rect.top > windowHeight * 0.9 && scrollRef.current.statsActive) {
-          scrollRef.current.statsActive = false;
-          setAllStatsActive(false);
-        }
-      });
-    }, 16), // ~60fps
-    []
+      const rect = sectionRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      
+      if (rect.top < windowHeight * 0.7 && !scrollRef.current.statsActive) {
+        scrollRef.current.statsActive = true;
+        setAllStatsActive(true);
+      } else if (rect.top > windowHeight * 0.9 && scrollRef.current.statsActive) {
+        scrollRef.current.statsActive = false;
+        setAllStatsActive(false);
+      }
+    });
+  }, []);
+
+  // Throttled scroll handler
+  const throttledScrollHandler = useCallback(
+    _.throttle(handleScroll, 32), // ~30fps instead of 60fps
+    [handleScroll]
   );
 
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
+    window.addEventListener('scroll', throttledScrollHandler, { passive: true });
+    throttledScrollHandler();
     
     return () => {
-      window.removeEventListener('scroll', handleScroll);
-      handleScroll.cancel();
+      window.removeEventListener('scroll', throttledScrollHandler);
+      throttledScrollHandler.cancel();
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
     };
-  }, [handleScroll]);
+  }, [throttledScrollHandler]);
 
-  interface Position {
-    x: number;
-    y: number;
-  }
-
-  // Memoized position calculations
+  // Memoized position calculations with better caching
   const positionCalculations = useMemo(() => {
     const smallScreenPositions = [
       { x: -75, y: 0 }, { x: 75, y: 0 }, { x: -130, y: 0 },
@@ -78,7 +84,7 @@ export default function StatsCard() {
     return { smallScreenPositions, mediumScreenPositions };
   }, []);
 
-  const getResponsivePosition = useCallback((defaultPosition: Position, statIndex: number) => {
+  const getResponsivePosition = useCallback((defaultPosition: { x: number; y: number }, statIndex: number) => {
     const { smallScreenPositions, mediumScreenPositions } = positionCalculations;
     
     if (windowWidth < 550) {
@@ -135,9 +141,9 @@ export default function StatsCard() {
     }
   ], []);
 
-  // Optimized particle generation with reduced count for better performance
+  // Significantly reduced particle generation
   const generateCoreParticles = useMemo(() => {
-    const particleCount = 40; // Reduced from 60
+    const particleCount = 20; // Reduced from 40
     const particles = [];
     
     for (let i = 0; i < particleCount; i++) {
@@ -148,7 +154,7 @@ export default function StatsCard() {
       const initialX = Math.cos(angle) * radius;
       const initialY = Math.sin(angle) * radius;
       
-      const speed = Math.random() * 6 + 4;
+      const speed = Math.random() * 8 + 6; // Faster animation for fewer particles
       const opacity = Math.random() * 0.7 + 0.3;
       const hue = Math.random() > 0.5 ? "amber" : "blue";
       
@@ -161,7 +167,7 @@ export default function StatsCard() {
   }, []);
 
   const generateAmbientParticles = useMemo(() => {
-    const particleCount = 300; // Reduced from 500
+    const particleCount = 150; // Reduced from 300
     const particles = [];
     
     for (let i = 0; i < particleCount; i++) {
@@ -169,8 +175,8 @@ export default function StatsCard() {
       const initialX = (Math.random() - 0.5) * 1000;
       const initialY = (Math.random() - 0.5) * 500;
       
-      const duration = Math.random() * 12 + 8;
-      const delay = Math.random() * 5;
+      const duration = Math.random() * 15 + 10; // Slower for less CPU usage
+      const delay = Math.random() * 8; // Spread out animations more
       const opacity = Math.random() * 0.5 + 0.1;
       const hue = Math.random() > 0.5 ? "amber" : "blue";
       
@@ -182,7 +188,7 @@ export default function StatsCard() {
     return particles;
   }, []);
 
-  // Optimized particle components with better memoization
+  // Optimized particle components with reduced re-renders
   const CoreParticles = React.memo(() => (
     <>
       {generateCoreParticles.map(particle => (
@@ -195,20 +201,20 @@ export default function StatsCard() {
             opacity: particle.opacity,
             x: particle.initialX,
             y: particle.initialY,
-            willChange: 'transform, opacity'
+            willChange: 'transform'
           }}
           animate={{
             rotate: [0, 360],
             x: [
               particle.initialX,
-              particle.initialX * (1 + (Math.random() * 0.4 - 0.2)),
-              particle.initialX * (1 + (Math.random() * 0.4 - 0.2)),
+              particle.initialX * 1.1,
+              particle.initialX * 0.9,
               particle.initialX
             ],
             y: [
               particle.initialY,
-              particle.initialY * (1 + (Math.random() * 0.4 - 0.2)),
-              particle.initialY * (1 + (Math.random() * 0.4 - 0.2)),
+              particle.initialY * 1.1,
+              particle.initialY * 0.9,
               particle.initialY
             ],
             opacity: [particle.opacity, particle.opacity * 0.6, particle.opacity * 0.8, particle.opacity],
@@ -216,10 +222,9 @@ export default function StatsCard() {
           transition={{
             duration: particle.speed,
             repeat: Infinity,
-            ease: "easeInOut",
+            ease: "linear", // Changed from easeInOut to linear for better performance
             times: [0, 0.33, 0.66, 1],
-            repeatType: "loop",
-            repeatDelay: 0
+            repeatType: "loop"
           }}
         />
       ))}
@@ -238,19 +243,19 @@ export default function StatsCard() {
             opacity: particle.opacity,
             x: particle.initialX,
             y: particle.initialY,
-            willChange: 'transform, opacity'
+            willChange: 'transform'
           }}
           animate={{
             x: [
               particle.initialX,
-              particle.initialX + Math.random() * 100 - 50,
-              particle.initialX + Math.random() * 100 - 50,
+              particle.initialX + 50,
+              particle.initialX - 50,
               particle.initialX
             ],
             y: [
               particle.initialY,
-              particle.initialY + Math.random() * 100 - 50,
-              particle.initialY + Math.random() * 100 - 50,
+              particle.initialY + 50,
+              particle.initialY - 50,
               particle.initialY
             ],
             opacity: [particle.opacity, particle.opacity * 0.6, particle.opacity * 0.8, particle.opacity],
@@ -258,11 +263,10 @@ export default function StatsCard() {
           transition={{
             duration: particle.duration,
             repeat: Infinity,
-            ease: "easeInOut",
+            ease: "linear", // Changed from easeInOut to linear
             delay: particle.delay,
             times: [0, 0.33, 0.66, 1],
-            repeatType: "loop",
-            repeatDelay: 0
+            repeatType: "loop"
           }}
         />
       ))}
@@ -276,14 +280,15 @@ export default function StatsCard() {
     </>
   ));
 
-  // Optimized revolving stars with better calculations
+  // Optimized revolving stars with simpler calculations
   const revolvingMotionValues = useMemo(() => {
     return stats.map((_, index) => {
       const angleOffset = (index / stats.length) * 2 * Math.PI;
       const positions = [];
       
-      for (let i = 0; i <= 12; i++) {
-        const angle = angleOffset + (i * Math.PI / 6);
+      // Reduced from 12 to 8 keyframes
+      for (let i = 0; i <= 8; i++) {
+        const angle = angleOffset + (i * Math.PI / 4);
         positions.push({
           x: Math.cos(angle) * 100,
           y: Math.sin(angle) * 100
@@ -308,7 +313,7 @@ export default function StatsCard() {
             height: 32,
             boxShadow: allStatsActive ? "none" : "0 0 12px rgba(245, 158, 11, 0.5)",
             background: allStatsActive ? "none" : "radial-gradient(circle, rgba(245,158,11,0.7) 0%, rgba(245,158,11,0.3) 70%)",
-            willChange: 'transform, opacity'
+            willChange: 'transform'
           }}
           initial={{
             x: 0,
@@ -324,7 +329,7 @@ export default function StatsCard() {
           transition={
             allStatsActive
               ? { duration: 1, ease: "easeOut" }
-              : { duration: 20, repeat: Infinity, ease: "linear", repeatType: "loop" }
+              : { duration: 24, repeat: Infinity, ease: "linear", repeatType: "loop" } // Slower rotation
           }
         >
           <Star
@@ -338,7 +343,7 @@ export default function StatsCard() {
     });
   }, [allStatsActive, stats, getResponsivePosition, revolvingMotionValues]);
 
-  // Optimized burst particles with reduced count
+  // Optimized burst particles with fewer particles
   const BurstParticles = React.memo(({ active }: { active: boolean }) => {
     const bursts = useMemo(() => {
       if (!active) return [];
@@ -348,13 +353,13 @@ export default function StatsCard() {
       stats.forEach((stat, statIndex) => {
         const responsivePosition = getResponsivePosition(stat.finalPosition, statIndex);
         
-        // Reduced from 20 to 12 particles per burst
-        for (let i = 0; i < 12; i++) {
+        // Reduced from 12 to 8 particles per burst
+        for (let i = 0; i < 8; i++) {
           const size = Math.random() * 4 + 1;
           const angle = Math.random() * Math.PI * 2;
-          const distance = Math.random() * 150 + 50;
-          const duration = Math.random() * 1.5 + 1;
-          const delay = Math.random() * 0.3;
+          const distance = Math.random() * 120 + 40; // Reduced distance
+          const duration = Math.random() * 1.2 + 0.8; // Shorter duration
+          const delay = Math.random() * 0.2; // Reduced delay spread
           
           burstParticles.push(
             <motion.div
@@ -366,7 +371,7 @@ export default function StatsCard() {
                 x: responsivePosition.x,
                 y: responsivePosition.y,
                 opacity: 0,
-                willChange: 'transform, opacity'
+                willChange: 'transform'
               }}
               animate={{
                 x: responsivePosition.x + Math.cos(angle) * distance,
@@ -417,10 +422,10 @@ export default function StatsCard() {
                 y: responsivePosition.y
               }}
               transition={{
-                duration: 0.8,
-                delay: 0.2 + (index * 0.1)
+                duration: 0.6, // Reduced from 0.8
+                delay: 0.1 + (index * 0.05) // Reduced delays
               }}
-              style={{ willChange: 'transform, opacity' }}
+              style={{ willChange: 'transform' }}
             >
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-amber-50 flex items-center justify-center mb-2 shadow-lg">
                 <StatIcon size={30} className={stat.color} />
@@ -434,7 +439,7 @@ export default function StatsCard() {
     );
   });
 
-  // Optimized core energy with better performance
+  // Optimized core energy with simpler animations
   const CoreEnergy = React.memo(() => {
     return (
       <motion.div
@@ -447,37 +452,37 @@ export default function StatsCard() {
           duration: 1,
           type: "tween"
         }}
-        style={{ willChange: 'transform, opacity' }}
+        style={{ willChange: 'transform' }}
       >
         <motion.div
           className="absolute w-full h-full rounded-full bg-gradient-to-r from-amber-500/30 to-blue-500/20"
           style={{
             boxShadow: "0 0 40px rgba(245, 158, 11, 0.3)",
-            willChange: 'transform, opacity'
+            willChange: 'transform'
           }}
           animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.7, 0.9, 0.7],
+            scale: [1, 1.05, 1], // Reduced scale change
+            opacity: [0.7, 0.85, 0.7], // Reduced opacity change
           }}
           transition={{
-            duration: 4,
+            duration: 6, // Slower animation
             repeat: Infinity,
-            ease: "easeInOut",
+            ease: "linear", // Changed from easeInOut
           }}
         />
         
         <motion.div
           className="absolute w-4/5 h-4/5 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-amber-500/30"
           animate={{
-            scale: [1, 1.15, 1],
-            opacity: [0.4, 0.7, 0.4],
+            scale: [1, 1.08, 1], // Reduced scale change
+            opacity: [0.4, 0.6, 0.4], // Reduced opacity change
           }}
           transition={{
-            duration: 5,
+            duration: 8, // Slower animation
             repeat: Infinity,
-            ease: "easeInOut",
+            ease: "linear", // Changed from easeInOut
           }}
-          style={{ willChange: 'transform, opacity' }}
+          style={{ willChange: 'transform' }}
         />
         
         <motion.div
@@ -487,16 +492,16 @@ export default function StatsCard() {
             height: 20,
             transform: 'translate(-50%, -50%)',
             boxShadow: "0 0 20px rgba(245, 158, 11, 0.8)",
-            willChange: 'transform, opacity'
+            willChange: 'transform'
           }}
           animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.8, 1, 0.8],
+            scale: [1, 1.15, 1], // Reduced scale change
+            opacity: [0.8, 0.95, 0.8], // Reduced opacity change
           }}
           transition={{
-            duration: 2,
+            duration: 4, // Slower animation
             repeat: Infinity,
-            ease: "easeInOut",
+            ease: "linear", // Changed from easeInOut
           }}
         />
       </motion.div>
@@ -509,20 +514,38 @@ export default function StatsCard() {
       ref={sectionRef}
       className="py-24 px-6 bg-stone-100 relative overflow-hidden"
     >
-      {/* Optimized background elements with better CSS */}
-      <div className="absolute top-[15%] left-[-5%] w-3/5 h-2/5 bg-amber-300/20 rounded-full blur-3xl opacity-60" 
-           style={{ animation: 'pulse 15s ease-in-out infinite' }} />
-      <div className="absolute top-[150%] right-[20%] w-1/2 h-1/2 bg-amber-300/20 rounded-full blur-3xl opacity-60" 
-           style={{ animation: 'pulse 22s ease-in-out infinite' }} />
-      <div className="absolute bottom-[15%] right-[-10%] w-3/4 h-2/4 bg-blue-300/20 rounded-full blur-3xl opacity-60" 
-           style={{ animation: 'pulse 22s ease-in-out infinite' }} />
+      {/* Simplified background elements with CSS animations instead of JS */}
+      <div 
+        className="absolute top-[15%] left-[-5%] w-3/5 h-2/5 bg-amber-300/20 rounded-full blur-3xl opacity-60" 
+        style={{ 
+          animation: 'backgroundPulse 15s ease-in-out infinite',
+          transform: 'translateZ(0)', // Force hardware acceleration
+          backfaceVisibility: 'hidden'
+        }} 
+      />
+      <div 
+        className="absolute top-[150%] right-[20%] w-1/2 h-1/2 bg-amber-300/20 rounded-full blur-3xl opacity-60" 
+        style={{ 
+          animation: 'backgroundPulse 22s ease-in-out infinite',
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden'
+        }} 
+      />
+      <div 
+        className="absolute bottom-[15%] right-[-10%] w-3/4 h-2/4 bg-blue-300/20 rounded-full blur-3xl opacity-60" 
+        style={{ 
+          animation: 'backgroundPulse 22s ease-in-out infinite',
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden'
+        }} 
+      />
 
       <div className="max-w-7xl mx-auto relative z-10">
         <motion.div
           className="flex items-center justify-center mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
+          transition={{ duration: 0.5 }} // Reduced duration
           viewport={{ once: true }}
         >
           <div className="relative">
@@ -534,12 +557,12 @@ export default function StatsCard() {
               className="absolute -right-6 -top-1 text-xl text-amber-500 not-italic"
               animate={{
                 rotate: [0, 15, 0, -15, 0],
-                scale: [1, 1.2, 1, 1.2, 1]
+                scale: [1, 1.1, 1, 1.1, 1] // Reduced scale change
               }}
               transition={{
-                duration: 5,
+                duration: 8, // Slower animation
                 repeat: Infinity,
-                ease: "easeInOut"
+                ease: "linear" // Changed from easeInOut
               }}
             >
               ✦
@@ -551,7 +574,7 @@ export default function StatsCard() {
           className="max-w-4xl mx-auto rounded-[48px]"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
+          transition={{ duration: 0.5, delay: 0.1 }} // Reduced duration and delay
           viewport={{ once: true }}
         >
           <div className="relative h-[32rem] flex items-center justify-center">
@@ -570,12 +593,12 @@ export default function StatsCard() {
               className="opacity-70 text-gray-600 cursor-default"
               whileHover={{
                 opacity: 1,
-                y: -5,
-                rotate: index % 2 === 0 ? 15 : -15,
+                y: -3, // Reduced movement
+                rotate: index % 2 === 0 ? 10 : -10, // Reduced rotation
                 color: '#F59E0B',
-                scale: 1.2
+                scale: 1.1 // Reduced scale
               }}
-              transition={{ type: 'spring', stiffness: 300 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }} // Better spring config
             >
               {word}
             </motion.span>
@@ -585,27 +608,48 @@ export default function StatsCard() {
       
       <style>
         {`
+          @keyframes backgroundPulse {
+            0%, 100% { 
+              opacity: 0.4; 
+              transform: translateZ(0) scale(1); 
+            }
+            50% { 
+              opacity: 0.6; 
+              transform: translateZ(0) scale(1.02); 
+            }
+          }
+
           @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
-            100% { transform: translateY(0px); }
+            0% { transform: translateY(0px) translateZ(0); }
+            50% { transform: translateY(-15px) translateZ(0); }
+            100% { transform: translateY(0px) translateZ(0); }
           }
         
           @keyframes float-medium {
-            0% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-12px) rotate(10deg); }
-            100% { transform: translateY(0px) rotate(0deg); }
+            0% { transform: translateY(0px) rotate(0deg) translateZ(0); }
+            50% { transform: translateY(-12px) rotate(10deg) translateZ(0); }
+            100% { transform: translateY(0px) rotate(0deg) translateZ(0); }
           }
         
           @keyframes float-slow {
-            0% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(5deg); }
-            100% { transform: translateY(0px) rotate(0deg); }
+            0% { transform: translateY(0px) rotate(0deg) translateZ(0); }
+            50% { transform: translateY(-20px) rotate(5deg) translateZ(0); }
+            100% { transform: translateY(0px) rotate(0deg) translateZ(0); }
           }
         
           @keyframes pulse-fast {
-            0%, 100% { opacity: 0.3; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.1); }
+            0%, 100% { opacity: 0.3; transform: scale(1) translateZ(0); }
+            50% { opacity: 0.5; transform: scale(1.1) translateZ(0); }
+          }
+
+          /* Force hardware acceleration for better performance */
+          .animate-float,
+          .animate-float-medium,
+          .animate-float-slow,
+          .animate-pulse-fast {
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            perspective: 1000px;
           }
         
           .animate-float {
