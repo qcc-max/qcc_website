@@ -5,95 +5,80 @@ import _ from 'lodash';
 
 export default function StatsCard() {
   const [allStatsActive, setAllStatsActive] = useState(false);
-  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const scrollRef = useRef({ statsActive: false });
-  const animationFrameRef = useRef<number>();
-
-  // More aggressive throttling for resize handler
-  const handleResize = useCallback(
-    _.throttle(() => {
-      setWindowWidth(window.innerWidth);
-    }, 200), // Increased from 100ms to 200ms
-    []
+  const [windowWidth, setWindowWidth] = useState(() => 
+    typeof window !== 'undefined' ? window.innerWidth : 1200
   );
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const scrollStateRef = useRef({ statsActive: false });
 
+  // Optimized resize handler with better throttling
   useEffect(() => {
+    const handleResize = _.throttle(() => {
+      setWindowWidth(window.innerWidth);
+    }, 100); // Reduced throttle time for better responsiveness
+
     window.addEventListener('resize', handleResize, { passive: true });
-    handleResize();
     
     return () => {
       window.removeEventListener('resize', handleResize);
       handleResize.cancel();
     };
-  }, [handleResize]);
-
-  // Optimized scroll handler with better performance
-  const handleScroll = useCallback(() => {
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-    
-    animationFrameRef.current = requestAnimationFrame(() => {
-      if (!sectionRef.current) return;
-      
-      const rect = sectionRef.current.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      
-      if (rect.top < windowHeight * 0.7 && !scrollRef.current.statsActive) {
-        scrollRef.current.statsActive = true;
-        setAllStatsActive(true);
-      } else if (rect.top > windowHeight * 0.9 && scrollRef.current.statsActive) {
-        scrollRef.current.statsActive = false;
-        setAllStatsActive(false);
-      }
-    });
   }, []);
 
-  // Throttled scroll handler
-  const throttledScrollHandler = useCallback(
-    _.throttle(handleScroll, 32), // ~30fps instead of 60fps
-    [handleScroll]
-  );
-
+  // Optimized scroll handler with Intersection Observer fallback
   useEffect(() => {
-    window.addEventListener('scroll', throttledScrollHandler, { passive: true });
-    throttledScrollHandler();
-    
+    let intersectionObserver: IntersectionObserver | null = null;
+    let scrollHandler: (() => void) | null = null;
+
+    // Use Intersection Observer if available (better performance)
+    if ('IntersectionObserver' in window && sectionRef.current) {
+      intersectionObserver = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0];
+          const shouldActivate = entry.intersectionRatio > 0.2;
+          
+          if (shouldActivate !== scrollStateRef.current.statsActive) {
+            scrollStateRef.current.statsActive = shouldActivate;
+            setAllStatsActive(shouldActivate);
+          }
+        },
+        { 
+          threshold: [0, 0.2, 0.8, 1],
+          rootMargin: '0px 0px -20% 0px' 
+        }
+      );
+      
+      intersectionObserver.observe(sectionRef.current);
+    } else {
+      // Fallback to scroll listener for older browsers
+      scrollHandler = _.throttle(() => {
+        if (!sectionRef.current) return;
+        
+        const rect = sectionRef.current.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        
+        const shouldActivate = rect.top < windowHeight * 0.8;
+        if (shouldActivate !== scrollStateRef.current.statsActive) {
+          scrollStateRef.current.statsActive = shouldActivate;
+          setAllStatsActive(shouldActivate);
+        }
+      }, 100);
+
+      window.addEventListener('scroll', scrollHandler, { passive: true });
+    }
+
     return () => {
-      window.removeEventListener('scroll', throttledScrollHandler);
-      throttledScrollHandler.cancel();
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
+      if (intersectionObserver) {
+        intersectionObserver.disconnect();
+      }
+      if (scrollHandler) {
+        window.removeEventListener('scroll', scrollHandler);
+        if ('cancel' in scrollHandler && typeof (scrollHandler as any).cancel === 'function') {
+          (scrollHandler as any).cancel();
+        }
       }
     };
-  }, [throttledScrollHandler]);
-
-  // Memoized position calculations with better caching
-  const positionCalculations = useMemo(() => {
-    const smallScreenPositions = [
-      { x: -75, y: 0 }, { x: 75, y: 0 }, { x: -130, y: 0 },
-      { x: 130, y: 0 }, { x: -75, y: 0 }, { x: 75, y: 0 }
-    ];
-    
-    const mediumScreenPositions = [
-      { x: -110, y: 0 }, { x: 110, y: 0 }, { x: -200, y: 0 },
-      { x: 200, y: 0 }, { x: -110, y: 0 }, { x: 110, y: 0 }
-    ];
-
-    return { smallScreenPositions, mediumScreenPositions };
   }, []);
-
-  const getResponsivePosition = useCallback((defaultPosition: { x: number; y: number }, statIndex: number) => {
-    const { smallScreenPositions, mediumScreenPositions } = positionCalculations;
-    
-    if (windowWidth < 550) {
-      return { ...smallScreenPositions[statIndex], y: defaultPosition.y };
-    } else if (windowWidth < 800) {
-      return { ...mediumScreenPositions[statIndex], y: defaultPosition.y };
-    }
-    return defaultPosition;
-  }, [windowWidth, positionCalculations]);
 
   // Memoized stats data
   const stats = useMemo(() => [
@@ -141,169 +126,163 @@ export default function StatsCard() {
     }
   ], []);
 
-  // Significantly reduced particle generation
-  const generateCoreParticles = useMemo(() => {
-    const particleCount = 20; // Reduced from 40
-    const particles = [];
-    
-    for (let i = 0; i < particleCount; i++) {
-      const size = Math.random() * 3 + 1;
+  // Memoized responsive position calculator
+  const getResponsivePosition = useCallback((defaultPosition: { x: number; y: number }, statIndex: number) => {
+    const smallScreenPositions = [
+      { x: -75, y: defaultPosition.y },
+      { x: 75, y: defaultPosition.y },
+      { x: -130, y: defaultPosition.y },
+      { x: 130, y: defaultPosition.y },
+      { x: -75, y: defaultPosition.y },
+      { x: 75, y: defaultPosition.y }
+    ];
+
+    const mediumScreenPositions = [
+      { x: -110, y: defaultPosition.y },
+      { x: 110, y: defaultPosition.y },
+      { x: -200, y: defaultPosition.y },
+      { x: 200, y: defaultPosition.y },
+      { x: -110, y: defaultPosition.y },
+      { x: 110, y: defaultPosition.y }
+    ];
+
+    if (windowWidth < 550) {
+      return smallScreenPositions[statIndex];
+    } else if (windowWidth < 800) {
+      return mediumScreenPositions[statIndex];
+    }
+    return defaultPosition;
+  }, [windowWidth]);
+
+  // Optimized particle generation with reduced count for mobile
+  const generateParticleProps = useCallback((type: 'core' | 'ambient') => {
+    const isMobile = windowWidth < 768;
+    const particleCount = type === 'core' 
+      ? (isMobile ? 30 : 60) 
+      : (isMobile ? 150 : 300); // Reduced particle count significantly
+
+    return Array.from({ length: particleCount }, (_, i) => {
+      const size = Math.random() * (type === 'core' ? 3 : 2) + (type === 'core' ? 1 : 0.5);
       const angle = Math.random() * Math.PI * 2;
-      const radius = Math.random() * 60 + 10;
+      const radius = type === 'core' ? Math.random() * 60 + 10 : 0;
       
-      const initialX = Math.cos(angle) * radius;
-      const initialY = Math.sin(angle) * radius;
+      const initialX = type === 'core' 
+        ? Math.cos(angle) * radius 
+        : (Math.random() - 0.5) * (isMobile ? 500 : 1000);
+      const initialY = type === 'core' 
+        ? Math.sin(angle) * radius 
+        : (Math.random() - 0.5) * (isMobile ? 300 : 500);
       
-      const speed = Math.random() * 8 + 6; // Faster animation for fewer particles
-      const opacity = Math.random() * 0.7 + 0.3;
+      const duration = type === 'core' 
+        ? Math.random() * 6 + 4 
+        : Math.random() * 12 + 8;
+      const opacity = Math.random() * (type === 'core' ? 0.7 : 0.5) + (type === 'core' ? 0.3 : 0.1);
       const hue = Math.random() > 0.5 ? "amber" : "blue";
-      
-      particles.push({
-        size, initialX, initialY, speed, opacity, hue, key: `core-particle-${i}`
-      });
-    }
-    
-    return particles;
-  }, []);
 
-  const generateAmbientParticles = useMemo(() => {
-    const particleCount = 150; // Reduced from 300
-    const particles = [];
-    
-    for (let i = 0; i < particleCount; i++) {
-      const size = Math.random() * 2.5 + 0.5;
-      const initialX = (Math.random() - 0.5) * 1000;
-      const initialY = (Math.random() - 0.5) * 500;
-      
-      const duration = Math.random() * 15 + 10; // Slower for less CPU usage
-      const delay = Math.random() * 8; // Spread out animations more
-      const opacity = Math.random() * 0.5 + 0.1;
-      const hue = Math.random() > 0.5 ? "amber" : "blue";
-      
-      particles.push({
-        size, initialX, initialY, duration, delay, opacity, hue, key: `ambient-particle-${i}`
-      });
-    }
-    
-    return particles;
-  }, []);
-
-  // Optimized particle components with reduced re-renders
-  const CoreParticles = React.memo(() => (
-    <>
-      {generateCoreParticles.map(particle => (
-        <motion.div
-          key={particle.key}
-          className={`absolute rounded-full ${particle.hue === 'amber' ? 'bg-amber-600' : 'bg-blue-600'}`}
-          style={{
-            width: particle.size,
-            height: particle.size,
-            opacity: particle.opacity,
-            x: particle.initialX,
-            y: particle.initialY,
-            willChange: 'transform'
-          }}
-          animate={{
-            rotate: [0, 360],
-            x: [
-              particle.initialX,
-              particle.initialX * 1.1,
-              particle.initialX * 0.9,
-              particle.initialX
-            ],
-            y: [
-              particle.initialY,
-              particle.initialY * 1.1,
-              particle.initialY * 0.9,
-              particle.initialY
-            ],
-            opacity: [particle.opacity, particle.opacity * 0.6, particle.opacity * 0.8, particle.opacity],
-          }}
-          transition={{
-            duration: particle.speed,
-            repeat: Infinity,
-            ease: "linear", // Changed from easeInOut to linear for better performance
-            times: [0, 0.33, 0.66, 1],
-            repeatType: "loop"
-          }}
-        />
-      ))}
-    </>
-  ));
-
-  const AmbientParticles = React.memo(() => (
-    <>
-      {generateAmbientParticles.map(particle => (
-        <motion.div
-          key={particle.key}
-          className={`absolute rounded-full ${particle.hue === 'amber' ? 'bg-amber-600' : 'bg-blue-600'}`}
-          style={{
-            width: particle.size,
-            height: particle.size,
-            opacity: particle.opacity,
-            x: particle.initialX,
-            y: particle.initialY,
-            willChange: 'transform'
-          }}
-          animate={{
-            x: [
-              particle.initialX,
-              particle.initialX + 50,
-              particle.initialX - 50,
-              particle.initialX
-            ],
-            y: [
-              particle.initialY,
-              particle.initialY + 50,
-              particle.initialY - 50,
-              particle.initialY
-            ],
-            opacity: [particle.opacity, particle.opacity * 0.6, particle.opacity * 0.8, particle.opacity],
-          }}
-          transition={{
-            duration: particle.duration,
-            repeat: Infinity,
-            ease: "linear", // Changed from easeInOut to linear
-            delay: particle.delay,
-            times: [0, 0.33, 0.66, 1],
-            repeatType: "loop"
-          }}
-        />
-      ))}
-    </>
-  ));
-
-  const ParticleSystem = React.memo(() => (
-    <>
-      <CoreParticles />
-      <AmbientParticles />
-    </>
-  ));
-
-  // Optimized revolving stars with simpler calculations
-  const revolvingMotionValues = useMemo(() => {
-    return stats.map((_, index) => {
-      const angleOffset = (index / stats.length) * 2 * Math.PI;
-      const positions = [];
-      
-      // Reduced from 12 to 8 keyframes
-      for (let i = 0; i <= 8; i++) {
-        const angle = angleOffset + (i * Math.PI / 4);
-        positions.push({
-          x: Math.cos(angle) * 100,
-          y: Math.sin(angle) * 100
-        });
-      }
-      
-      return positions;
+      return {
+        key: `${type}-particle-${i}`,
+        size,
+        initialX,
+        initialY,
+        duration,
+        opacity,
+        hue,
+        delay: type === 'ambient' ? Math.random() * 5 : 0
+      };
     });
-  }, [stats.length]);
+  }, [windowWidth]);
 
-  const generateRevolvingStars = useMemo(() => {
+  // Memoized particle components with reduced complexity
+  const ParticleSystem = React.memo(() => {
+    const coreParticles = useMemo(() => generateParticleProps('core'), [generateParticleProps]);
+    const ambientParticles = useMemo(() => generateParticleProps('ambient'), [generateParticleProps]);
+
+    return (
+      <>
+        {/* Core Particles */}
+        {coreParticles.map((particle) => (
+          <motion.div
+            key={particle.key}
+            className={`absolute rounded-full ${particle.hue === 'amber' ? 'bg-amber-600' : 'bg-blue-600'}`}
+            style={{
+              width: particle.size,
+              height: particle.size,
+              opacity: particle.opacity,
+              x: particle.initialX,
+              y: particle.initialY,
+            }}
+            animate={{
+              rotate: [0, 360],
+              x: [
+                particle.initialX,
+                particle.initialX * 1.2,
+                particle.initialX * 0.8,
+                particle.initialX
+              ],
+              y: [
+                particle.initialY,
+                particle.initialY * 1.2,
+                particle.initialY * 0.8,
+                particle.initialY
+              ],
+              opacity: [particle.opacity, particle.opacity * 0.6, particle.opacity],
+            }}
+            transition={{
+              duration: particle.duration,
+              repeat: Infinity,
+              ease: "easeInOut",
+              repeatType: "loop",
+            }}
+          />
+        ))}
+        
+        {/* Ambient Particles */}
+        {ambientParticles.map((particle) => (
+          <motion.div
+            key={particle.key}
+            className={`absolute rounded-full ${particle.hue === 'amber' ? 'bg-amber-600' : 'bg-blue-600'}`}
+            style={{
+              width: particle.size,
+              height: particle.size,
+              opacity: particle.opacity,
+              x: particle.initialX,
+              y: particle.initialY,
+            }}
+            animate={{
+              x: [
+                particle.initialX,
+                particle.initialX + 50,
+                particle.initialX - 50,
+                particle.initialX
+              ],
+              y: [
+                particle.initialY,
+                particle.initialY + 50,
+                particle.initialY - 50,
+                particle.initialY
+              ],
+              opacity: [particle.opacity, particle.opacity * 0.6, particle.opacity],
+            }}
+            transition={{
+              duration: particle.duration,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: particle.delay,
+              repeatType: "loop",
+            }}
+          />
+        ))}
+      </>
+    );
+  });
+
+  // Optimized revolving stars with simplified animation
+  const revolvingStars = useMemo(() => {
     return stats.map((stat, index) => {
+      const angleOffset = (index / stats.length) * 2 * Math.PI;
       const responsivePosition = getResponsivePosition(stat.finalPosition, index);
-      const motionValues = revolvingMotionValues[index];
-      
+      const radius = windowWidth < 768 ? 80 : 100; // Smaller radius on mobile
+
       return (
         <motion.div
           key={`star-${index}`}
@@ -311,26 +290,30 @@ export default function StatsCard() {
           style={{
             width: 32,
             height: 32,
-            boxShadow: allStatsActive ? "none" : "0 0 12px rgba(245, 158, 11, 0.5)",
-            background: allStatsActive ? "none" : "radial-gradient(circle, rgba(245,158,11,0.7) 0%, rgba(245,158,11,0.3) 70%)",
-            willChange: 'transform'
           }}
           initial={{
-            x: 0,
-            y: 0,
+            x: Math.cos(angleOffset) * radius,
+            y: Math.sin(angleOffset) * radius,
             opacity: 1,
           }}
-          animate={{
-            x: allStatsActive ? responsivePosition.x : motionValues.map(pos => pos.x),
-            y: allStatsActive ? responsivePosition.y : motionValues.map(pos => pos.y),
-            scale: allStatsActive ? 0 : 1,
-            opacity: allStatsActive ? 0 : 1,
+          animate={allStatsActive ? {
+            x: responsivePosition.x,
+            y: responsivePosition.y,
+            scale: 0,
+            opacity: 0,
+          } : {
+            x: Math.cos(angleOffset) * radius,
+            y: Math.sin(angleOffset) * radius,
+            rotate: 360,
           }}
-          transition={
-            allStatsActive
-              ? { duration: 1, ease: "easeOut" }
-              : { duration: 24, repeat: Infinity, ease: "linear", repeatType: "loop" } // Slower rotation
-          }
+          transition={allStatsActive ? {
+            duration: 1,
+            ease: "easeOut",
+          } : {
+            duration: 20,
+            repeat: Infinity,
+            ease: "linear",
+          }}
         >
           <Star
             size={20}
@@ -341,27 +324,27 @@ export default function StatsCard() {
         </motion.div>
       );
     });
-  }, [allStatsActive, stats, getResponsivePosition, revolvingMotionValues]);
+  }, [allStatsActive, stats, getResponsivePosition, windowWidth]);
 
-  // Optimized burst particles with fewer particles
+  // Optimized burst particles with conditional rendering
   const BurstParticles = React.memo(({ active }: { active: boolean }) => {
     const bursts = useMemo(() => {
       if (!active) return [];
-      
-      const burstParticles: React.ReactNode[] = [];
-      
-      stats.forEach((stat, statIndex) => {
+
+      const isMobile = windowWidth < 768;
+      const particleCount = isMobile ? 10 : 20; // Fewer particles on mobile
+
+      return stats.flatMap((stat, statIndex) => {
         const responsivePosition = getResponsivePosition(stat.finalPosition, statIndex);
         
-        // Reduced from 12 to 8 particles per burst
-        for (let i = 0; i < 8; i++) {
+        return Array.from({ length: particleCount }, (_, i) => {
           const size = Math.random() * 4 + 1;
           const angle = Math.random() * Math.PI * 2;
-          const distance = Math.random() * 120 + 40; // Reduced distance
-          const duration = Math.random() * 1.2 + 0.8; // Shorter duration
-          const delay = Math.random() * 0.2; // Reduced delay spread
-          
-          burstParticles.push(
+          const distance = Math.random() * (isMobile ? 100 : 150) + 50;
+          const duration = Math.random() * 1.5 + 1;
+          const delay = Math.random() * 0.3;
+
+          return (
             <motion.div
               key={`burst-${statIndex}-${i}`}
               className={`absolute rounded-full ${i % 2 === 0 ? 'bg-amber-600' : 'bg-blue-600'}`}
@@ -370,9 +353,8 @@ export default function StatsCard() {
                 height: size,
                 x: responsivePosition.x,
                 y: responsivePosition.y,
-                opacity: 0,
-                willChange: 'transform'
               }}
+              initial={{ opacity: 0, scale: 0 }}
               animate={{
                 x: responsivePosition.x + Math.cos(angle) * distance,
                 y: responsivePosition.y + Math.sin(angle) * distance,
@@ -386,25 +368,23 @@ export default function StatsCard() {
               }}
             />
           );
-        }
+        });
       });
-      
-      return burstParticles;
-    }, [active, getResponsivePosition]);
-    
+    }, [active, windowWidth, stats, getResponsivePosition]);
+
     return <>{bursts}</>;
   });
 
-  // Optimized stats content
+  // Optimized stats content with lazy loading
   const StatsContent = React.memo(({ active }: { active: boolean }) => {
     if (!active) return null;
-    
+
     return (
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {stats.map((stat, index) => {
           const StatIcon = stat.icon;
           const responsivePosition = getResponsivePosition(stat.finalPosition, index);
-          
+
           return (
             <motion.div
               key={`stat-content-${index}`}
@@ -421,17 +401,21 @@ export default function StatsCard() {
                 x: responsivePosition.x,
                 y: responsivePosition.y
               }}
-              transition={{
-                duration: 0.6, // Reduced from 0.8
-                delay: 0.1 + (index * 0.05) // Reduced delays
+              exit={{
+                opacity: 0,
+                scale: 0.5
               }}
-              style={{ willChange: 'transform' }}
+              transition={{
+                duration: 0.6,
+                delay: index * 0.08,
+                ease: "easeOut"
+              }}
             >
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-amber-50 flex items-center justify-center mb-2 shadow-lg">
                 <StatIcon size={30} className={stat.color} />
               </div>
               <h3 className="text-gray-800 text-2xl font-medium mb-1">{stat.value}</h3>
-              <p className="text-gray-600 text-sm max-w-[140px]">{stat.label}</p>
+              <p className="text-gray-600 text-sm max-w-[140px] leading-tight">{stat.label}</p>
             </motion.div>
           );
         })}
@@ -439,7 +423,7 @@ export default function StatsCard() {
     );
   });
 
-  // Optimized core energy with simpler animations
+  // Simplified core energy component
   const CoreEnergy = React.memo(() => {
     return (
       <motion.div
@@ -450,58 +434,45 @@ export default function StatsCard() {
         }}
         transition={{
           duration: 1,
-          type: "tween"
+          ease: "easeOut"
         }}
-        style={{ willChange: 'transform' }}
       >
         <motion.div
-          className="absolute w-full h-full rounded-full bg-gradient-to-r from-amber-500/30 to-blue-500/20"
-          style={{
-            boxShadow: "0 0 40px rgba(245, 158, 11, 0.3)",
-            willChange: 'transform'
-          }}
+          className="absolute w-full h-full rounded-full bg-gradient-to-r from-amber-500/30 to-blue-500/20 shadow-[0_0_40px_rgba(245,158,11,0.3)]"
           animate={{
-            scale: [1, 1.05, 1], // Reduced scale change
-            opacity: [0.7, 0.85, 0.7], // Reduced opacity change
+            scale: [1, 1.1, 1],
+            opacity: [0.7, 0.9, 0.7],
           }}
           transition={{
-            duration: 6, // Slower animation
+            duration: 4,
             repeat: Infinity,
-            ease: "linear", // Changed from easeInOut
+            ease: "easeInOut",
           }}
         />
         
         <motion.div
           className="absolute w-4/5 h-4/5 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-amber-500/30"
           animate={{
-            scale: [1, 1.08, 1], // Reduced scale change
-            opacity: [0.4, 0.6, 0.4], // Reduced opacity change
+            scale: [1, 1.15, 1],
+            opacity: [0.4, 0.7, 0.4],
           }}
           transition={{
-            duration: 8, // Slower animation
+            duration: 5,
             repeat: Infinity,
-            ease: "linear", // Changed from easeInOut
+            ease: "easeInOut",
           }}
-          style={{ willChange: 'transform' }}
         />
         
         <motion.div
-          className="absolute top-1/2 left-1/2 rounded-full bg-gradient-to-br from-amber-500 to-blue-500"
-          style={{
-            width: 20,
-            height: 20,
-            transform: 'translate(-50%, -50%)',
-            boxShadow: "0 0 20px rgba(245, 158, 11, 0.8)",
-            willChange: 'transform'
-          }}
+          className="absolute top-1/2 left-1/2 w-5 h-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-amber-500 to-blue-500 shadow-[0_0_20px_rgba(245,158,11,0.8)]"
           animate={{
-            scale: [1, 1.15, 1], // Reduced scale change
-            opacity: [0.8, 0.95, 0.8], // Reduced opacity change
+            scale: [1, 1.3, 1],
+            opacity: [0.8, 1, 0.8],
           }}
           transition={{
-            duration: 4, // Slower animation
+            duration: 2,
             repeat: Infinity,
-            ease: "linear", // Changed from easeInOut
+            ease: "easeInOut",
           }}
         />
       </motion.div>
@@ -514,39 +485,17 @@ export default function StatsCard() {
       ref={sectionRef}
       className="py-24 px-6 bg-stone-100 relative overflow-hidden"
     >
-      {/* Simplified background elements with CSS animations instead of JS */}
-      <div 
-        className="absolute top-[15%] left-[-5%] w-3/5 h-2/5 bg-amber-300/20 rounded-full blur-3xl opacity-60" 
-        style={{ 
-          animation: 'backgroundPulse 15s ease-in-out infinite',
-          transform: 'translateZ(0)', // Force hardware acceleration
-          backfaceVisibility: 'hidden'
-        }} 
-      />
-      <div 
-        className="absolute top-[150%] right-[20%] w-1/2 h-1/2 bg-amber-300/20 rounded-full blur-3xl opacity-60" 
-        style={{ 
-          animation: 'backgroundPulse 22s ease-in-out infinite',
-          transform: 'translateZ(0)',
-          backfaceVisibility: 'hidden'
-        }} 
-      />
-      <div 
-        className="absolute bottom-[15%] right-[-10%] w-3/4 h-2/4 bg-blue-300/20 rounded-full blur-3xl opacity-60" 
-        style={{ 
-          animation: 'backgroundPulse 22s ease-in-out infinite',
-          transform: 'translateZ(0)',
-          backfaceVisibility: 'hidden'
-        }} 
-      />
+      {/* Optimized background elements with CSS animations */}
+      <div className="absolute top-[15%] left-[-5%] w-3/5 h-2/5 bg-amber-300/20 rounded-full blur-3xl animate-pulse-slow" />
+      <div className="absolute bottom-[15%] right-[-10%] w-3/4 h-2/4 bg-blue-300/20 rounded-full blur-3xl animate-pulse-slower" />
 
       <div className="max-w-7xl mx-auto relative z-10">
         <motion.div
           className="flex items-center justify-center mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }} // Reduced duration
-          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+          viewport={{ once: true, margin: "-100px" }}
         >
           <div className="relative">
             <h2 className="text-4xl md:text-5xl font-light text-gray-800 relative inline-block tracking-tight">
@@ -554,15 +503,15 @@ export default function StatsCard() {
             </h2>
             
             <motion.span
-              className="absolute -right-6 -top-1 text-xl text-amber-500 not-italic"
+              className="absolute -right-6 -top-1 text-xl text-amber-500 not-italic select-none"
               animate={{
                 rotate: [0, 15, 0, -15, 0],
-                scale: [1, 1.1, 1, 1.1, 1] // Reduced scale change
+                scale: [1, 1.2, 1, 1.2, 1]
               }}
               transition={{
-                duration: 8, // Slower animation
+                duration: 5,
                 repeat: Infinity,
-                ease: "linear" // Changed from easeInOut
+                ease: "easeInOut"
               }}
             >
               ✦
@@ -571,16 +520,16 @@ export default function StatsCard() {
         </motion.div>
 
         <motion.div
-          className="max-w-4xl mx-auto rounded-[48px]"
+          className="max-w-4xl mx-auto"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }} // Reduced duration and delay
-          viewport={{ once: true }}
+          transition={{ duration: 0.7, delay: 0.2 }}
+          viewport={{ once: true, margin: "-100px" }}
         >
           <div className="relative h-[32rem] flex items-center justify-center">
             <ParticleSystem />
             <CoreEnergy />
-            {generateRevolvingStars}
+            {revolvingStars}
             <BurstParticles active={allStatsActive} />
             <StatsContent active={allStatsActive} />
           </div>
@@ -589,16 +538,16 @@ export default function StatsCard() {
         <div className="mt-16 w-full flex justify-center gap-2 text-sm">
           {['✦', 'transforming', 'education', 'outcomes', '✦'].map((word, index) => (
             <motion.span
-              key={index}
-              className="opacity-70 text-gray-600 cursor-default"
+              key={`${word}-${index}`}
+              className="opacity-70 text-gray-600 cursor-default select-none"
               whileHover={{
                 opacity: 1,
-                y: -3, // Reduced movement
-                rotate: index % 2 === 0 ? 10 : -10, // Reduced rotation
+                y: -5,
+                rotate: index % 2 === 0 ? 15 : -15,
                 color: '#F59E0B',
-                scale: 1.1 // Reduced scale
+                scale: 1.2
               }}
-              transition={{ type: 'spring', stiffness: 400, damping: 25 }} // Better spring config
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             >
               {word}
             </motion.span>
@@ -606,69 +555,25 @@ export default function StatsCard() {
         </div>
       </div>
       
-      <style>
-        {`
-          @keyframes backgroundPulse {
-            0%, 100% { 
-              opacity: 0.4; 
-              transform: translateZ(0) scale(1); 
-            }
-            50% { 
-              opacity: 0.6; 
-              transform: translateZ(0) scale(1.02); 
-            }
-          }
-
-          @keyframes float {
-            0% { transform: translateY(0px) translateZ(0); }
-            50% { transform: translateY(-15px) translateZ(0); }
-            100% { transform: translateY(0px) translateZ(0); }
-          }
+      <style>{`
+        @keyframes pulse-slow {
+          0%, 100% { opacity: 0.1; transform: scale(1); }
+          50% { opacity: 0.3; transform: scale(1.05); }
+        }
         
-          @keyframes float-medium {
-            0% { transform: translateY(0px) rotate(0deg) translateZ(0); }
-            50% { transform: translateY(-12px) rotate(10deg) translateZ(0); }
-            100% { transform: translateY(0px) rotate(0deg) translateZ(0); }
-          }
+        @keyframes pulse-slower {
+          0%, 100% { opacity: 0.15; transform: scale(1); }
+          50% { opacity: 0.25; transform: scale(1.03); }
+        }
         
-          @keyframes float-slow {
-            0% { transform: translateY(0px) rotate(0deg) translateZ(0); }
-            50% { transform: translateY(-20px) rotate(5deg) translateZ(0); }
-            100% { transform: translateY(0px) rotate(0deg) translateZ(0); }
-          }
+        .animate-pulse-slow {
+          animation: pulse-slow 15s ease-in-out infinite;
+        }
         
-          @keyframes pulse-fast {
-            0%, 100% { opacity: 0.3; transform: scale(1) translateZ(0); }
-            50% { opacity: 0.5; transform: scale(1.1) translateZ(0); }
-          }
-
-          /* Force hardware acceleration for better performance */
-          .animate-float,
-          .animate-float-medium,
-          .animate-float-slow,
-          .animate-pulse-fast {
-            transform: translateZ(0);
-            backface-visibility: hidden;
-            perspective: 1000px;
-          }
-        
-          .animate-float {
-            animation: float 6s ease-in-out infinite;
-          }
-        
-          .animate-float-medium {
-            animation: float-medium 7s ease-in-out infinite;
-          }
-        
-          .animate-float-slow {
-            animation: float-slow 8s ease-in-out infinite;
-          }
-        
-          .animate-pulse-fast {
-            animation: pulse-fast 3s ease-in-out infinite;
-          }
-        `}
-      </style>
+        .animate-pulse-slower {
+          animation: pulse-slower 22s ease-in-out infinite;
+        }
+      `}</style>
     </section>
   );
 }

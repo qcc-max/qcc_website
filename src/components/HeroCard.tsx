@@ -37,18 +37,9 @@ const STATIC_CONNECTION_DOTS = [
 
 const STATIC_DECORATIVE_ITEMS = ['✦', 'your', 'path', 'to', 'success', '✦'];
 
-const STATIC_BACKGROUND_ACCENTS = [
-  { top: '250%', right: '-5%', width: '60%', height: '40%', color: 'amber', delay: 15 },
-  { top: '38%', right: '20%', width: '50%', height: '50%', color: 'amber', delay: 22 },
-  { bottom: '10%', left: '-10%', width: '75%', height: '33%', color: 'blue', delay: 22 },
-  { top: '-20%', right: '-20%', width: '75%', height: '75%', color: 'blue', delay: 15 },
-  { bottom: '20%', left: '-10%', width: '60%', height: '40%', color: 'amber', delay: 20 },
-];
+const cachedMaps = new Map();
 
-// Cache for expensive computations
-const mapCache = new Map();
-
-// Optimized WorldMap Component with lazy loading and reduced re-renders
+// Optimized WorldMap Component with improved lazy loading
 const WorldMap = memo(({
   dots = [],
   lineColor = "#0ea5e9",
@@ -56,18 +47,22 @@ const WorldMap = memo(({
   dotOpacity = 0.4,
 }: WorldMapProps) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
   const observerRef = useRef<HTMLDivElement>(null);
 
-  // Intersection observer for lazy loading
+  // Intersection observer for lazy loading with reduced threshold
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
+          // Delay map loading slightly to prioritize visible content
+          const timer = setTimeout(() => setIsMapLoaded(true), 100);
           observer.disconnect();
+          return () => clearTimeout(timer);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.05, rootMargin: '50px' }
     );
 
     if (observerRef.current) {
@@ -78,28 +73,32 @@ const WorldMap = memo(({
   }, []);
 
   const { svgMap, processedDots } = useMemo(() => {
-    const cacheKey = `${dotColor}-${JSON.stringify(dots)}`;
+    if (!isMapLoaded) return { svgMap: '', processedDots: [] };
     
-    if (mapCache.has(cacheKey)) {
-      return mapCache.get(cacheKey);
+    const cacheKey = `${dotColor}-${dots.length}`;
+    
+    if (cachedMaps.has(cacheKey)) {
+      return cachedMaps.get(cacheKey);
     }
 
-    const map = new DottedMap({ height: 100, grid: "diagonal" });
+    const map = new DottedMap({ height: 80, grid: "diagonal" }); // Reduced height for performance
     const svgMap = map.getSVG({
-      radius: 0.22,
+      radius: 0.2, // Slightly smaller for better performance
       color: dotColor,
       shape: "circle",
       backgroundColor: "transparent",
     });
 
+    // Optimized projection calculations
     const projectPoint = (lat: number, lng: number) => ({
-      x: (lng + 180) * (800 / 360),
-      y: (90 - lat) * (400 / 180)
+      x: ((lng + 180) * 800) / 360,
+      y: ((90 - lat) * 400) / 180
     });
 
     const createCurvedPath = (start: { x: number; y: number }, end: { x: number; y: number }) => {
       const midY = Math.min(start.y, end.y) - 50;
-      return `M ${start.x} ${start.y} Q ${(start.x + end.x) / 2} ${midY} ${end.x} ${end.y}`;
+      const midX = (start.x + end.x) / 2;
+      return `M ${start.x} ${start.y} Q ${midX} ${midY} ${end.x} ${end.y}`;
     };
 
     const processedDots = dots.map((dot, i) => {
@@ -109,83 +108,87 @@ const WorldMap = memo(({
     });
 
     const result = { svgMap, processedDots };
-    mapCache.set(cacheKey, result);
+    cachedMaps.set(cacheKey, result);
     return result;
-  }, [dotColor, dots]);
+  }, [dotColor, dots, isMapLoaded]);
 
   const dataUri = useMemo(() => 
-    `data:image/svg+xml;utf8,${encodeURIComponent(svgMap)}`, 
+    svgMap ? `data:image/svg+xml;utf8,${encodeURIComponent(svgMap)}` : '', 
     [svgMap]
   );
 
   return (
     <div ref={observerRef} className="w-full aspect-[2/1] relative">
       {isVisible ? (
-        <>
-          <img
-            src={dataUri}
-            className="h-full w-full [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] pointer-events-none select-none"
-            style={{ opacity: dotOpacity }}
-            alt="world map"
-            draggable={false}
-            loading="lazy"
-            decoding="async"
-          />
-          
-          <svg
-            viewBox="0 0 800 400"
-            className="w-full h-full absolute inset-0 pointer-events-none select-none"
-          >
-            <defs>
-              <linearGradient id="path-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="white" stopOpacity="0" />
-                <stop offset="5%" stopColor={lineColor} stopOpacity="1" />
-                <stop offset="95%" stopColor={lineColor} stopOpacity="1" />
-                <stop offset="100%" stopColor="white" stopOpacity="0" />
-              </linearGradient>
-            </defs>
+        isMapLoaded ? (
+          <>
+            <img
+              src={dataUri}
+              className="h-full w-full [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] pointer-events-none select-none"
+              style={{ opacity: dotOpacity }}
+              alt="world map"
+              draggable={false}
+              loading="lazy"
+              decoding="async"
+            />
+            
+            <svg
+              viewBox="0 0 800 400"
+              className="w-full h-full absolute inset-0 pointer-events-none select-none"
+            >
+              <defs>
+                <linearGradient id="path-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="white" stopOpacity="0" />
+                  <stop offset="5%" stopColor={lineColor} stopOpacity="1" />
+                  <stop offset="95%" stopColor={lineColor} stopOpacity="1" />
+                  <stop offset="100%" stopColor="white" stopOpacity="0" />
+                </linearGradient>
+              </defs>
 
-            {processedDots.map(
-              (
-                {
-                  start,
-                  end,
-                  path,
-                  index,
-                }: {
-                  start: { x: number; y: number };
-                  end: { x: number; y: number };
-                  path: string;
-                  index: number;
-                }
-              ) => (
-                <g key={`connection-${index}`}>
-                  <motion.path
-                    d={path}
-                    fill="none"
-                    stroke="url(#path-gradient)"
-                    strokeWidth="1"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 1, delay: 0.2 * index, ease: "easeOut" }}
-                  />
-                  
-                  {[start, end].map((point, j) => (
-                    <g key={`point-${index}-${j}`}>
-                      <circle cx={point.x} cy={point.y} r="2" fill={lineColor} />
-                      <circle cx={point.x} cy={point.y} r="2" fill={lineColor} opacity="0.5">
-                        <animate attributeName="r" from="2" to="8" dur="1.5s" repeatCount="indefinite" />
-                        <animate attributeName="opacity" from="0.5" to="0" dur="1.5s" repeatCount="indefinite" />
-                      </circle>
-                    </g>
-                  ))}
-                </g>
-              )
-            )}
-          </svg>
-        </>
+              {processedDots.map(
+                (
+                  {
+                    start,
+                    end,
+                    path,
+                    index,
+                  }: {
+                    start: { x: number; y: number };
+                    end: { x: number; y: number };
+                    path: string;
+                    index: number;
+                  }
+                ) => (
+                  <g key={index}>
+                    <motion.path
+                      d={path}
+                      fill="none"
+                      stroke="url(#path-gradient)"
+                      strokeWidth="1"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 1, delay: 0.1 * index, ease: "easeOut" }}
+                    />
+                    
+                    {[start, end].map((point, j) => (
+                      <g key={`${index}-${j}`}>
+                        <circle cx={point.x} cy={point.y} r="2" fill={lineColor} />
+                        <circle cx={point.x} cy={point.y} r="2" fill={lineColor} opacity="0.5">
+                          <animate attributeName="r" from="2" to="8" dur="2s" repeatCount="indefinite" />
+                          <animate attributeName="opacity" from="0.5" to="0" dur="2s" repeatCount="indefinite" />
+                        </circle>
+                      </g>
+                    ))}
+                  </g>
+                )
+              )}
+            </svg>
+          </>
+        ) : (
+          <div className="h-full w-full bg-gray-200 animate-pulse rounded-lg" />
+        )
       ) : (
-        <div className="h-full w-full bg-gray-100 animate-pulse rounded-lg" />
+        <div className="h-full w-full bg-gray-100 rounded-lg" />
       )}
     </div>
   );
@@ -193,7 +196,7 @@ const WorldMap = memo(({
 
 WorldMap.displayName = 'WorldMap';
 
-// Optimized StatsCard Component with reduced re-renders
+// Optimized StatsCard Component
 const StatsCard = memo(({ 
   studentCount = '500+', 
   countryCount = '15+',
@@ -202,83 +205,60 @@ const StatsCard = memo(({
   countryCount?: string;
 }) => (
   <motion.div
-    className="bg-white/90 backdrop-blur-lg rounded-xl shadow-xl border border-white/30 flex items-center gap-2 sm:gap-4 z-20
-               p-2 sm:p-4 hover:shadow-2xl hover:bg-white/95 transition-all duration-300
-               w-fit mx-auto text-center"
+    className="bg-white/90 backdrop-blur-lg rounded-lg shadow-lg border border-white/30 flex items-center gap-2 sm:gap-3 z-20 p-2 sm:p-3 w-fit mx-auto text-center transition-all duration-300 hover:shadow-xl hover:bg-white/95"
     initial={{ opacity: 0, scale: 0.8 }}
     animate={{ opacity: 1, scale: 1 }}
     transition={{ duration: 0.5, delay: 1 }}
-    whileHover={{ scale: 1.05 }}
+    whileHover={{ scale: 1.02 }} // Reduced scale for smoother animation
   >
     <div className="flex flex-col items-center">
-      <Users className="text-blue-500 w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1" />
-      <span className="text-gray-800 font-bold text-sm sm:text-lg leading-none">{studentCount}</span>
-      <span className="text-gray-500 text-xs sm:text-sm leading-none mt-0.5 sm:mt-1">Students</span>
+      <Users className="text-blue-500 w-3 h-3 sm:w-4 sm:h-4 mb-0.5" />
+      <span className="text-gray-800 font-bold text-xs sm:text-base">{studentCount}</span>
+      <span className="text-gray-500 text-xs mt-0.5">Students</span>
     </div>
     
-    <div className="w-px h-8 sm:h-12 bg-gradient-to-b from-transparent via-gray-300 to-transparent" />
+    <div className="w-px h-6 sm:h-8 bg-gradient-to-b from-transparent via-gray-300 to-transparent" />
     
     <div className="flex flex-col items-center">
-      <GraduationCap className="text-amber-500 w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1" />
-      <span className="text-gray-800 font-bold text-sm sm:text-lg leading-none">{countryCount}</span>
-      <span className="text-gray-500 text-xs sm:text-sm leading-none mt-0.5 sm:mt-1">Countries</span>
+      <GraduationCap className="text-amber-500 w-3 h-3 sm:w-4 sm:h-4 mb-0.5" />
+      <span className="text-gray-800 font-bold text-xs sm:text-base">{countryCount}</span>
+      <span className="text-gray-500 text-xs mt-0.5">Countries</span>
     </div>
   </motion.div>
 ));
 
 StatsCard.displayName = 'StatsCard';
 
-// Optimized background accents with CSS animations instead of JS
+// Pure CSS background accents for better performance
 const BackgroundAccents = memo(() => (
   <>
-    {STATIC_BACKGROUND_ACCENTS.map((bg, i) => (
-      <div
-        key={i}
-        className={`absolute rounded-full blur-3xl bg-${bg.color}-300/20`}
-        style={{
-          top: bg.top,
-          right: bg.right,
-          bottom: bg.bottom,
-          left: bg.left,
-          width: bg.width,
-          height: bg.height,
-          animation: `pulse ${bg.delay}s infinite`,
-        }}
-      />
-    ))}
+    <div className="absolute top-[250%] right-[-5%] w-[60%] h-[40%] rounded-full blur-3xl bg-amber-300/20 animate-pulse" style={{ animationDuration: '15s' }} />
+    <div className="absolute top-[38%] right-[20%] w-[50%] h-[50%] rounded-full blur-3xl bg-amber-300/20 animate-pulse" style={{ animationDuration: '22s' }} />
+    <div className="absolute bottom-[10%] left-[-10%] w-[75%] h-[33%] rounded-full blur-3xl bg-blue-300/20 animate-pulse" style={{ animationDuration: '22s' }} />
+    <div className="absolute top-[-20%] right-[-20%] w-[75%] h-[75%] rounded-full blur-3xl bg-blue-300/20 animate-pulse" style={{ animationDuration: '15s' }} />
+    <div className="absolute bottom-[20%] left-[-10%] w-[60%] h-[40%] rounded-full blur-3xl bg-amber-300/20 animate-pulse" style={{ animationDuration: '20s' }} />
   </>
 ));
 
 BackgroundAccents.displayName = 'BackgroundAccents';
 
-// Optimized decorative star animation
-const OptimizedStar = memo(() => {
-  const [mounted, setMounted] = useState(false);
-  
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return <span>✦</span>;
-
-  return (
-    <motion.span
-      className="absolute -top-2 left-3 text-lg text-amber-500 not-italic"
-      animate={{
-        rotate: [0, 15, 0, -15, 0],
-        scale: [1, 1.2, 1, 1.2, 1]
-      }}
-      transition={{
-        duration: 5,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }}
-      style={{ transform: 'translateZ(0)' }} // Force GPU acceleration
-    >
-      ✦
-    </motion.span>
-  );
-});
+// Simplified star animation with reduced complexity
+const OptimizedStar = memo(() => (
+  <motion.span
+    className="absolute -top-2 left-3 text-lg text-amber-500"
+    animate={{
+      rotate: [0, 15, 0, -15, 0],
+      scale: [1, 1.1, 1, 1.1, 1]
+    }}
+    transition={{
+      duration: 6,
+      repeat: Infinity,
+      ease: "easeInOut"
+    }}
+  >
+    ✦
+  </motion.span>
+));
 
 OptimizedStar.displayName = 'OptimizedStar';
 
@@ -287,25 +267,23 @@ export const HeroCard = memo(() => {
   const navigate = useNavigate();
 
   // Stable callback references
-  const handleStartJourney = useCallback(() => {
-    navigate('/book');
+  const handleNavigation = useCallback((path: string) => {
+    navigate(path);
   }, [navigate]);
 
-  const handleBookMeeting = useCallback(() => {
-    navigate('/book');
-  }, [navigate]);
+  const handleStartJourney = useCallback(() => handleNavigation('/book'), [handleNavigation]);
+  const handleBookMeeting = useCallback(() => handleNavigation('/book'), [handleNavigation]);
 
   return (
     <section id="home" className="min-h-screen w-full pt-20 pb-12 bg-stone-100 relative overflow-hidden">
       <BackgroundAccents />
-      <br />
       
-      <div className="max-w-7xl mx-auto flex flex-col items-center text-center relative z-10 px-4">
+      <div className="max-w-7xl mx-auto flex flex-col items-center text-center relative z-10 px-4 pt-4">
         <motion.div
           className="mb-6"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
+          transition={{ duration: 0.6 }}
         >
           <h1 className="text-4xl md:text-5xl font-medium text-gray-800 mb-4">
             From applications to acceptances:{' '}
@@ -320,7 +298,7 @@ export const HeroCard = memo(() => {
 
           <p className="text-lg md:text-xl text-gray-600">
             Supporting students from{' '}
-            <span className="text-amber-500 relative inline-block hover:rotate-3 transition-all cursor-default">
+            <span className="text-amber-500 relative inline-block transition-transform hover:rotate-3 cursor-default">
               every corner
               <span className="absolute bottom-0 left-0 w-full h-0.5 bg-amber-500/30" />
             </span>{' '}
@@ -332,11 +310,11 @@ export const HeroCard = memo(() => {
           className="flex flex-col sm:flex-row gap-3"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.3 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
         >
           <Button
             onClick={handleStartJourney}
-            className="h-10 px-6 py-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full text-base hover:shadow-lg hover:shadow-blue-300/20 hover:-translate-y-1 transition-all"
+            className="h-10 px-6 py-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full text-base transition-all hover:shadow-lg hover:shadow-blue-300/20 hover:-translate-y-1"
           >
             Start Your Journey
           </Button>
@@ -344,7 +322,7 @@ export const HeroCard = memo(() => {
           <Button
             onClick={handleBookMeeting}
             variant="outline"
-            className="h-10 px-6 py-2 text-blue-600 border-blue-300 rounded-full text-base hover:bg-blue-50 hover:text-blue-700 hover:-translate-y-1 transition-all"
+            className="h-10 px-6 py-2 text-blue-600 border-blue-300 rounded-full text-base transition-all hover:bg-blue-50 hover:text-blue-700 hover:-translate-y-1"
           >
             Book Free Meeting
           </Button>
@@ -354,12 +332,12 @@ export const HeroCard = memo(() => {
           className="mt-8 flex justify-center gap-2 text-xs text-gray-400"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.7, delay: 0.5 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
         >
           {STATIC_DECORATIVE_ITEMS.map((item, i) => (
             <span
               key={i}
-              className="opacity-70 hover:opacity-100 hover:text-amber-500 hover:-translate-y-1 hover:rotate-3 transition-all cursor-default"
+              className="opacity-70 transition-all cursor-default hover:opacity-100 hover:text-amber-500 hover:-translate-y-1 hover:rotate-3"
             >
               {item}
             </span>
@@ -370,8 +348,8 @@ export const HeroCard = memo(() => {
           className="mt-8 sm:mt-12 w-full max-w-5xl"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.4 }}
-          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          viewport={{ once: true, margin: '-50px' }}
         >
           <div className="flex flex-col items-center">
             <h3 className="text-gray-800 text-sm sm:text-base font-medium flex items-center gap-2 mb-3 sm:mb-4">
