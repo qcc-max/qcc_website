@@ -39,30 +39,37 @@ const STATIC_DECORATIVE_ITEMS = ['✦', 'your', 'path', 'to', 'success', '✦'];
 
 const cachedMaps = new Map();
 
-// Optimized WorldMap Component with improved lazy loading
+// Optimized WorldMap Component with immediate loading
 const WorldMap = memo(({
   dots = [],
   lineColor = "#0ea5e9",
   dotColor = "#374151",
   dotOpacity = 0.4,
 }: WorldMapProps) => {
-  const [isVisible, setIsVisible] = useState(false);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const observerRef = useRef<HTMLDivElement>(null);
 
-  // Intersection observer for lazy loading with reduced threshold
+  // Start loading the map immediately when component mounts
+  useEffect(() => {
+    // Load map immediately with small delay to avoid blocking UI
+    const loadTimer = setTimeout(() => {
+      setIsMapLoaded(true);
+    }, 50);
+
+    return () => clearTimeout(loadTimer);
+  }, []);
+
+  // Still use intersection observer for animations, but with much larger margin
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
-          // Delay map loading slightly to prioritize visible content
-          const timer = setTimeout(() => setIsMapLoaded(true), 100);
           observer.disconnect();
-          return () => clearTimeout(timer);
         }
       },
-      { threshold: 0.05, rootMargin: '50px' }
+      { threshold: 0, rootMargin: '300px' } // Much larger margin to trigger earlier
     );
 
     if (observerRef.current) {
@@ -81,9 +88,9 @@ const WorldMap = memo(({
       return cachedMaps.get(cacheKey);
     }
 
-    const map = new DottedMap({ height: 80, grid: "diagonal" }); // Reduced height for performance
+    const map = new DottedMap({ height: 80, grid: "diagonal" });
     const svgMap = map.getSVG({
-      radius: 0.2, // Slightly smaller for better performance
+      radius: 0.2,
       color: dotColor,
       shape: "circle",
       backgroundColor: "transparent",
@@ -119,76 +126,76 @@ const WorldMap = memo(({
 
   return (
     <div ref={observerRef} className="w-full aspect-[2/1] relative">
-      {isVisible ? (
-        isMapLoaded ? (
-          <>
-            <img
-              src={dataUri}
-              className="h-full w-full [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] pointer-events-none select-none"
-              style={{ opacity: dotOpacity }}
-              alt="world map"
-              draggable={false}
-              loading="lazy"
-              decoding="async"
-            />
-            
-            <svg
-              viewBox="0 0 800 400"
-              className="w-full h-full absolute inset-0 pointer-events-none select-none"
-            >
-              <defs>
-                <linearGradient id="path-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="white" stopOpacity="0" />
-                  <stop offset="5%" stopColor={lineColor} stopOpacity="1" />
-                  <stop offset="95%" stopColor={lineColor} stopOpacity="1" />
-                  <stop offset="100%" stopColor="white" stopOpacity="0" />
-                </linearGradient>
-              </defs>
+      {isMapLoaded ? (
+        <>
+          <img
+            src={dataUri}
+            className="h-full w-full [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] pointer-events-none select-none"
+            style={{ opacity: dotOpacity }}
+            alt="world map"
+            draggable={false}
+            loading="eager" // Changed from lazy to eager loading
+            decoding="async"
+          />
+          
+          <svg
+            viewBox="0 0 800 400"
+            className="w-full h-full absolute inset-0 pointer-events-none select-none"
+          >
+            <defs>
+              <linearGradient id="path-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="white" stopOpacity="0" />
+                <stop offset="5%" stopColor={lineColor} stopOpacity="1" />
+                <stop offset="95%" stopColor={lineColor} stopOpacity="1" />
+                <stop offset="100%" stopColor="white" stopOpacity="0" />
+              </linearGradient>
+            </defs>
 
-              {processedDots.map(
-                (
-                  {
-                    start,
-                    end,
-                    path,
-                    index,
-                  }: {
-                    start: { x: number; y: number };
-                    end: { x: number; y: number };
-                    path: string;
-                    index: number;
-                  }
-                ) => (
-                  <g key={index}>
-                    <motion.path
-                      d={path}
-                      fill="none"
-                      stroke="url(#path-gradient)"
-                      strokeWidth="1"
-                      initial={{ pathLength: 0 }}
-                      animate={{ pathLength: 1 }}
-                      transition={{ duration: 1, delay: 0.1 * index, ease: "easeOut" }}
-                    />
-                    
-                    {[start, end].map((point, j) => (
-                      <g key={`${index}-${j}`}>
-                        <circle cx={point.x} cy={point.y} r="2" fill={lineColor} />
+            {processedDots.map(
+              (
+                {
+                  start,
+                  end,
+                  path,
+                  index,
+                }: {
+                  start: { x: number; y: number };
+                  end: { x: number; y: number };
+                  path: string;
+                  index: number;
+                }
+              ) => (
+                <g key={index}>
+                  <motion.path
+                    d={path}
+                    fill="none"
+                    stroke="url(#path-gradient)"
+                    strokeWidth="1"
+                    initial={{ pathLength: 0 }}
+                    animate={isVisible ? { pathLength: 1 } : { pathLength: 0 }}
+                    transition={{ duration: 1, delay: 0.1 * index, ease: "easeOut" }}
+                  />
+                  
+                  {[start, end].map((point, j) => (
+                    <g key={`${index}-${j}`}>
+                      <circle cx={point.x} cy={point.y} r="2" fill={lineColor} />
+                      {isVisible && (
                         <circle cx={point.x} cy={point.y} r="2" fill={lineColor} opacity="0.5">
                           <animate attributeName="r" from="2" to="8" dur="2s" repeatCount="indefinite" />
                           <animate attributeName="opacity" from="0.5" to="0" dur="2s" repeatCount="indefinite" />
                         </circle>
-                      </g>
-                    ))}
-                  </g>
-                )
-              )}
-            </svg>
-          </>
-        ) : (
-          <div className="h-full w-full bg-gray-200 animate-pulse rounded-lg" />
-        )
+                      )}
+                    </g>
+                  ))}
+                </g>
+              )
+            )}
+          </svg>
+        </>
       ) : (
-        <div className="h-full w-full bg-gray-100 rounded-lg" />
+        <div className="h-full w-full bg-gray-200 animate-pulse rounded-lg flex items-center justify-center">
+          <div className="text-gray-500 text-sm">Loading world map...</div>
+        </div>
       )}
     </div>
   );
@@ -209,7 +216,7 @@ const StatsCard = memo(({
     initial={{ opacity: 0, scale: 0.8 }}
     animate={{ opacity: 1, scale: 1 }}
     transition={{ duration: 0.5, delay: 1 }}
-    whileHover={{ scale: 1.02 }} // Reduced scale for smoother animation
+    whileHover={{ scale: 1.02 }}
   >
     <div className="flex flex-col items-center">
       <Users className="text-blue-500 w-3 h-3 sm:w-4 sm:h-4 mb-0.5" />
