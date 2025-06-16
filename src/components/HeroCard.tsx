@@ -2,7 +2,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { motion } from 'framer-motion';
 import { GraduationCap, Users } from 'lucide-react';
-import { memo, useMemo, useState, useEffect, useCallback } from 'react';
+import { memo, useMemo, useCallback } from 'react';
+import DottedMap from 'dotted-map';
 
 // Types
 type DotConnection = {
@@ -17,111 +18,63 @@ type WorldMapProps = {
   dotOpacity?: number;
 };
 
-// Memoized utility functions (moved outside component for better performance)
-const projectPoint = (lat: number, lng: number) => ({
-  x: (lng + 180) * (800 / 360),
-  y: (90 - lat) * (400 / 180)
-});
-
-const createCurvedPath = (start: { x: number; y: number }, end: { x: number; y: number }) => {
-  const midY = Math.min(start.y, end.y) - 50;
-  return `M ${start.x} ${start.y} Q ${(start.x + end.x) / 2} ${midY} ${end.x} ${end.y}`;
-};
-
-// Dynamic import hook for DottedMap
-const useDottedMap = () => {
-  const [DottedMap, setDottedMap] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      import('dotted-map')
-        .then((mod) => {
-          setDottedMap(() => mod.default);
-          setIsLoading(false);
-        })
-        .catch(() => {
-          setIsLoading(false);
-        });
-    } else {
-      setIsLoading(false);
-    }
-  }, []);
-
-  return { DottedMap, isLoading };
-};
-
-// Optimized WorldMap Component with better loading states
+// Memoized WorldMap Component with optimizations
 const WorldMap = memo(({
   dots = [],
   lineColor = "#0ea5e9",
   dotColor = "#374151",
   dotOpacity = 0.4,
 }: WorldMapProps) => {
-  const { DottedMap, isLoading } = useDottedMap();
+  const { svgMap, projectPoint, createCurvedPath } = useMemo(() => {
+    const map = new DottedMap({ height: 100, grid: "diagonal" });
+    const svgMap = map.getSVG({
+      radius: 0.22,
+      color: dotColor,
+      shape: "circle",
+      backgroundColor: "transparent",
+    });
 
-  // Memoize expensive calculations
-  const { svgMap, projectedDots } = useMemo(() => {
-    let svgMap = '';
-    
-    if (DottedMap && !isLoading) {
-      try {
-        const map = new DottedMap({ height: 100, grid: "diagonal" });
-        svgMap = map.getSVG({
-          radius: 0.22,
-          color: dotColor,
-          shape: "circle",
-          backgroundColor: "transparent",
-        });
-      } catch (error) {
-        console.warn('Failed to generate dotted map:', error);
-      }
-    }
+    const projectPoint = (lat: number, lng: number) => ({
+      x: (lng + 180) * (800 / 360),
+      y: (90 - lat) * (400 / 180)
+    });
 
-    const projectedDots = dots.map(dot => ({
-      start: projectPoint(dot.start.lat, dot.start.lng),
-      end: projectPoint(dot.end.lat, dot.end.lng),
-    }));
+    const createCurvedPath = (start: { x: number; y: number }, end: { x: number; y: number }) => {
+      const midY = Math.min(start.y, end.y) - 50;
+      return `M ${start.x} ${start.y} Q ${(start.x + end.x) / 2} ${midY} ${end.x} ${end.y}`;
+    };
 
-    return { svgMap, projectedDots };
-  }, [DottedMap, isLoading, dots, dotColor]);
+    return { svgMap, projectPoint, createCurvedPath };
+  }, [dotColor]);
 
-  const svgDataUrl = useMemo(() => 
-    svgMap ? `data:image/svg+xml;utf8,${encodeURIComponent(svgMap)}` : '',
+  const dataUri = useMemo(() => 
+    `data:image/svg+xml;utf8,${encodeURIComponent(svgMap)}`, 
     [svgMap]
   );
 
-  // Show loading state while DottedMap is loading
-  if (isLoading) {
-    return (
-      <div className="w-full aspect-[2/1] relative bg-gray-100 animate-pulse rounded flex items-center justify-center">
-        <div className="text-gray-400 text-sm">Loading map...</div>
-      </div>
-    );
-  }
+  const processedDots = useMemo(() => 
+    dots.map((dot, i) => {
+      const start = projectPoint(dot.start.lat, dot.start.lng);
+      const end = projectPoint(dot.end.lat, dot.end.lng);
+      return { start, end, path: createCurvedPath(start, end), index: i };
+    }), 
+    [dots, projectPoint, createCurvedPath]
+  );
 
   return (
     <div className="w-full aspect-[2/1] relative">
-      {svgDataUrl && (
-        <img
-          src={svgDataUrl}
-          className="h-full w-full pointer-events-none select-none"
-          style={{ 
-            maskImage: 'linear-gradient(to bottom, transparent, white 10%, white 90%, transparent)',
-            opacity: dotOpacity 
-          }}
-          alt="world map"
-          draggable={false}
-          loading="lazy"
-          decoding="async"
-        />
-      )}
+      <img
+        src={dataUri}
+        className="h-full w-full [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] pointer-events-none select-none"
+        style={{ opacity: dotOpacity }}
+        alt="world map"
+        draggable={false}
+        loading="eager"
+      />
       
       <svg
         viewBox="0 0 800 400"
         className="w-full h-full absolute inset-0 pointer-events-none select-none"
-        role="img"
-        aria-label="Global student connections"
       >
         <defs>
           <linearGradient id="path-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -132,51 +85,24 @@ const WorldMap = memo(({
           </linearGradient>
         </defs>
 
-        {projectedDots.map((dot, i) => (
-          <g key={i}>
+        {processedDots.map(({ start, end, path, index }) => (
+          <g key={`connection-${index}`}>
             <motion.path
-              d={createCurvedPath(dot.start, dot.end)}
+              d={path}
               fill="none"
               stroke="url(#path-gradient)"
               strokeWidth="1"
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
-              transition={{ 
-                duration: 1, 
-                delay: 0.2 * i, 
-                ease: "easeOut"
-              }}
+              transition={{ duration: 1, delay: 0.2 * index, ease: "easeOut" }}
             />
             
-            {[dot.start, dot.end].map((point, j) => (
-              <g key={`${i}-${j}`}>
-                <circle 
-                  cx={point.x} 
-                  cy={point.y} 
-                  r="2" 
-                  fill={lineColor} 
-                />
-                <circle 
-                  cx={point.x} 
-                  cy={point.y} 
-                  r="2" 
-                  fill={lineColor} 
-                  opacity="0.5"
-                >
-                  <animate 
-                    attributeName="r" 
-                    from="2" 
-                    to="8" 
-                    dur="1.5s" 
-                    repeatCount="indefinite" 
-                  />
-                  <animate 
-                    attributeName="opacity" 
-                    from="0.5" 
-                    to="0" 
-                    dur="1.5s" 
-                    repeatCount="indefinite" 
-                  />
+            {[start, end].map((point, j) => (
+              <g key={`point-${index}-${j}`}>
+                <circle cx={point.x} cy={point.y} r="2" fill={lineColor} />
+                <circle cx={point.x} cy={point.y} r="2" fill={lineColor} opacity="0.5">
+                  <animate attributeName="r" from="2" to="8" dur="1.5s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" from="0.5" to="0" dur="1.5s" repeatCount="indefinite" />
                 </circle>
               </g>
             ))}
@@ -189,7 +115,7 @@ const WorldMap = memo(({
 
 WorldMap.displayName = 'WorldMap';
 
-// Memoized StatsCard Component with better animations
+// Memoized StatsCard Component
 const StatsCard = memo(({ 
   studentCount = '500+', 
   countryCount = '15+',
@@ -199,23 +125,24 @@ const StatsCard = memo(({
 }) => {
   return (
     <motion.div
-      className="bg-white/90 backdrop-blur-lg rounded-xl shadow-xl border border-white/30 flex items-center gap-2 sm:gap-4 z-20 p-2 sm:p-4 hover:shadow-2xl hover:bg-white/95 transition-all duration-300 w-fit mx-auto text-center"
+      className="bg-white/90 backdrop-blur-lg rounded-xl shadow-xl border border-white/30 flex items-center gap-2 sm:gap-4 z-20
+                 p-2 sm:p-4 hover:shadow-2xl hover:bg-white/95 transition-all duration-300
+                 w-fit mx-auto text-center"
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: 1 }}
       whileHover={{ scale: 1.05 }}
-      style={{ willChange: 'transform' }}
     >
       <div className="flex flex-col items-center">
-        <Users className="text-blue-500 w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1" aria-hidden="true" />
+        <Users className="text-blue-500 w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1" />
         <span className="text-gray-800 font-bold text-sm sm:text-lg leading-none">{studentCount}</span>
         <span className="text-gray-500 text-xs sm:text-sm leading-none mt-0.5 sm:mt-1">Students</span>
       </div>
       
-      <div className="w-px h-8 sm:h-12 bg-gradient-to-b from-transparent via-gray-300 to-transparent" aria-hidden="true" />
+      <div className="w-px h-8 sm:h-12 bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
       
       <div className="flex flex-col items-center">
-        <GraduationCap className="text-amber-500 w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1" aria-hidden="true" />
+        <GraduationCap className="text-amber-500 w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1" />
         <span className="text-gray-800 font-bold text-sm sm:text-lg leading-none">{countryCount}</span>
         <span className="text-gray-500 text-xs sm:text-sm leading-none mt-0.5 sm:mt-1">Countries</span>
       </div>
@@ -225,22 +152,22 @@ const StatsCard = memo(({
 
 StatsCard.displayName = 'StatsCard';
 
-// Optimized background component with reduced DOM elements
-const AnimatedBackground = memo(() => {
-  const backgroundElements = useMemo(() => [
-    { top: '250%', right: '-5%', width: '60%', height: '40%', color: 'bg-amber-300/20', delay: 15 },
-    { top: '38%', right: '20%', width: '50%', height: '50%', color: 'bg-amber-300/20', delay: 22 },
-    { bottom: '10%', left: '-10%', width: '75%', height: '33%', color: 'bg-blue-300/20', delay: 22 },
-    { top: '-20%', right: '-20%', width: '75%', height: '75%', color: 'bg-blue-300/20', delay: 15 },
-    { bottom: '20%', left: '-10%', width: '60%', height: '40%', color: 'bg-amber-300/20', delay: 20 },
+// Memoized background accent component
+const BackgroundAccents = memo(() => {
+  const accents = useMemo(() => [
+    { top: '250%', right: '-5%', width: '60%', height: '40%', color: 'amber', delay: 15 },
+    { top: '38%', right: '20%', width: '50%', height: '50%', color: 'amber', delay: 22 },
+    { bottom: '10%', left: '-10%', width: '75%', height: '33%', color: 'blue', delay: 22 },
+    { top: '-20%', right: '-20%', width: '75%', height: '75%', color: 'blue', delay: 15 },
+    { bottom: '20%', left: '-10%', width: '60%', height: '40%', color: 'amber', delay: 20 },
   ], []);
 
   return (
     <>
-      {backgroundElements.map((bg, i) => (
+      {accents.map((bg, i) => (
         <div
           key={i}
-          className={`absolute rounded-full blur-3xl animate-pulse ${bg.color}`}
+          className={`absolute rounded-full blur-3xl animate-pulse bg-${bg.color}-300/20`}
           style={{
             top: bg.top,
             right: bg.right,
@@ -249,23 +176,28 @@ const AnimatedBackground = memo(() => {
             width: bg.width,
             height: bg.height,
             animationDuration: `${bg.delay}s`,
-            willChange: 'opacity',
-            contain: 'layout style paint'
+            willChange: 'opacity'
           }}
-          aria-hidden="true"
         />
       ))}
     </>
   );
 });
 
-AnimatedBackground.displayName = 'AnimatedBackground';
+BackgroundAccents.displayName = 'BackgroundAccents';
 
-// Main HeroCard Component with optimized callbacks
+// Main HeroCard Component
 export const HeroCard = memo(() => {
   const navigate = useNavigate();
 
-  // Memoize connection dots to prevent recreating on every render
+  const handleStartJourney = useCallback(() => {
+    navigate('/book');
+  }, [navigate]);
+
+  const handleBookMeeting = useCallback(() => {
+    navigate('/book');
+  }, [navigate]);
+
   const connectionDots = useMemo(() => [
     { start: { lat: 64.2008, lng: -149.4937 }, end: { lat: 35.0522, lng: -100.2437 } },
     { start: { lat: 64.2008, lng: -149.4937 }, end: { lat: -25, lng: -55.8919 } },
@@ -282,25 +214,18 @@ export const HeroCard = memo(() => {
     { start: { lat: 39.9334, lng: 32.8597 }, end: { lat: 47.5074, lng: -1.1278 } },
   ], []);
 
-  // Memoize navigation callbacks
-  const handleStartJourney = useCallback(() => navigate('/book'), [navigate]);
-  const handleBookMeeting = useCallback(() => navigate('/book'), [navigate]);
-
-  // Memoize tagline items
-  const taglineItems = useMemo(() => ['✦', 'your', 'path', 'to', 'success', '✦'], []);
+  const decorativeItems = useMemo(() => 
+    ['✦', 'your', 'path', 'to', 'success', '✦'], 
+    []
+  );
 
   return (
-    <section 
-      id="home" 
-      className="min-h-screen w-full pt-20 pb-12 bg-stone-100 relative overflow-hidden"
-      aria-label="Hero section"
-    >
-      <AnimatedBackground />
-      
-      <div className="pt-4" />
+    <section id="home" className="min-h-screen w-full pt-20 pb-12 bg-stone-100 relative overflow-hidden">
+      <BackgroundAccents />
+      <br />
       
       <div className="max-w-7xl mx-auto flex flex-col items-center text-center relative z-10 px-4">
-        <motion.header
+        <motion.div
           className="mb-6"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -325,7 +250,6 @@ export const HeroCard = memo(() => {
                   ease: "easeInOut"
                 }}
                 style={{ willChange: 'transform' }}
-                aria-hidden="true"
               >
                 ✦
               </motion.span>
@@ -336,11 +260,11 @@ export const HeroCard = memo(() => {
             Supporting students from{' '}
             <span className="text-amber-500 relative inline-block hover:rotate-3 transition-all cursor-default">
               every corner
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-amber-500/30" aria-hidden="true" />
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-amber-500/30"></span>
             </span>{' '}
             of the world
           </p>
-        </motion.header>
+        </motion.div>
 
         <motion.div
           className="flex flex-col sm:flex-row gap-3"
@@ -351,7 +275,6 @@ export const HeroCard = memo(() => {
           <Button
             onClick={handleStartJourney}
             className="h-10 px-6 py-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full text-base hover:shadow-lg hover:shadow-blue-300/20 hover:-translate-y-1 transition-all"
-            aria-label="Start your educational journey"
           >
             Start Your Journey
           </Button>
@@ -360,7 +283,6 @@ export const HeroCard = memo(() => {
             onClick={handleBookMeeting}
             variant="outline"
             className="h-10 px-6 py-2 text-blue-600 border-blue-300 rounded-full text-base hover:bg-blue-50 hover:text-blue-700 hover:-translate-y-1 transition-all"
-            aria-label="Book a free consultation meeting"
           >
             Book Free Meeting
           </Button>
@@ -371,9 +293,8 @@ export const HeroCard = memo(() => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.7, delay: 0.5 }}
-          role="presentation"
         >
-          {taglineItems.map((item, i) => (
+          {decorativeItems.map((item, i) => (
             <span
               key={i}
               className="opacity-70 hover:opacity-100 hover:text-amber-500 hover:-translate-y-1 hover:rotate-3 transition-all cursor-default"
@@ -383,31 +304,29 @@ export const HeroCard = memo(() => {
           ))}
         </motion.div>
 
-        {/* World Map Section */}
-        <motion.section
+        <motion.div
           className="mt-8 sm:mt-12 w-full max-w-5xl"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.4 }}
           viewport={{ once: true }}
-          aria-labelledby="global-network-heading"
         >
           <div className="flex flex-col items-center">
-            <h2 
-              id="global-network-heading"
-              className="text-gray-800 text-sm sm:text-base font-medium flex items-center gap-2 mb-3 sm:mb-4"
-            >
-              <GraduationCap size={16} className="text-amber-500 sm:w-[18px] sm:h-[18px]" aria-hidden="true" />
+            <h3 className="text-gray-800 text-sm sm:text-base font-medium flex items-center gap-2 mb-3 sm:mb-4">
+              <GraduationCap size={16} className="text-amber-500 sm:w-[18px] sm:h-[18px]" />
               Our Global Student Network
-            </h2>
+            </h3>
 
             <div className="w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[450px] relative mb-4 sm:mb-6">
               <WorldMap dots={connectionDots} lineColor="#3B82F6" />
             </div>
-            
-            <StatsCard studentCount="500+" countryCount="15+" />
+
+            <StatsCard 
+              studentCount="500+" 
+              countryCount="15+" 
+            />
           </div>
-        </motion.section>
+        </motion.div>
       </div>
     </section>
   );

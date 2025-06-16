@@ -7,15 +7,33 @@ const TESTIMONIALS_DATA = [
     quote: "I'm grateful I started working with QCC early, as it helped structure my entire college application process. They guided me in building a strong activity list, refining my Common App essay, and weaving my extracurriculars into a cohesive story. Their university selection advice was excellent, and they continued to support me through the visa process. Their expertise truly made a difference.",
     name: "Muhammed Umer Bhatti",
     designation: "University of Miami",
-    src: "/Umer.jpeg",
+    src: "/Umer.webp",
     gradient: "from-amber-400/20 to-blue-500/20",
     instagramUrl: "https://www.instagram.com/p/DI6tN_7IwwF/?utm_source=ig_web_copy_link&igsh=MTMwNGRyZGE2Znloeg=="
   },
+
+   {
+    quote: "The QCC team supported me throughout my college application journey with guidance at every step. They helped organize my activities and honors, and worked closely with me to craft a personal statement that reflected my identity and experiences as an Afghan girl. Their insight was especially valuable in turning my four-year gap into a powerful story of resilience. Thanks to QCC, I navigated a stressful process with clarity and strength.",
+    name: "Niloufar Rasouli",
+    designation: "Carleton College",
+    src: "/niloufar.webp",
+    gradient: "from-blue-500/20 to-amber-400/20",
+    instagramUrl: "https://www.instagram.com/p/DI9ocUpg7g4/?utm_source=ig_web_copy_link&igsh=M2tuZDVsbW5uejBu"
+  },
+    {
+    quote: "I remember sending QCC my first draft thinking it was pretty solid. They sent it back, torn apart in the best way. Every sentence was challenged. Every idea had to earn its place. It wasn't easy, but it was exactly what I needed. They didn't just help me write essays. They made sure I understood my story. QCC pushed me, sharpened my thinking, and made me better. Wouldn't have made it without them.",
+    name: "Ahmed Bajwa",
+    designation: "Imperial college London",
+    src: "/bajwa.webp",
+    gradient: "from-blue-600/20 to-amber-600/20",
+    instagramUrl: "https://www.instagram.com/p/DKPqS38IOt1/?utm_source=ig_web_copy_link&igsh=N3A2eHFjaGZlMjJj"
+  },
+
   {
     quote: "I came in with big goals but wasn't sure how to bring everything together. QCC helped me craft essays that truly reflected who I am — from research to extracurriculars. Their feedback was always thoughtful and sharp, and their support kept me grounded through the most stressful parts of the process. They also constantly kept me updated about scholarship opportunities around the world, which helped me stay ahead and focused.",
     name: "Maaz Habib",
     designation: "University College London",
-    src: "/maaz.jpeg",
+    src: "/maaz.webp",
     gradient: "from-blue-400/20 to-amber-500/20",
     instagramUrl: "https://www.instagram.com/p/DKRinexI8Db/?utm_source=ig_web_copy_link&igsh=bHdkaDZpd3ZteWt1"
   },
@@ -23,23 +41,15 @@ const TESTIMONIALS_DATA = [
     quote: "I joined late and didn't really know how to bring my ideas together. QCC made space for what mattered to me and still helped me build essays that were sharp and meaningful. Their feedback made everything clearer, and I wouldn't have gotten here without them.",
     name: "Taimoor Ali Asghar",
     designation: "Bennington College",
-    src: "/taimoor.jpeg",
+    src: "/taimoor.webp",
     gradient: "from-amber-500/20 to-blue-400/20",
     instagramUrl: "https://www.instagram.com/p/DKC7y2KoZ_Y/?utm_source=ig_web_copy_link&igsh=MTY4czAwM2hpdnd5aw=="
-  },
-  {
-    quote: "The QCC team supported me throughout my college application journey with guidance at every step. They helped organize my activities and honors, and worked closely with me to craft a personal statement that reflected my identity and experiences as an Afghan girl. Their insight was especially valuable in turning my four-year gap into a powerful story of resilience. Thanks to QCC, I navigated a stressful process with clarity and strength.",
-    name: "Niloufar Rasouli",
-    designation: "Carleton College",
-    src: "/niloufar.jpeg",
-    gradient: "from-blue-500/20 to-amber-400/20",
-    instagramUrl: "https://www.instagram.com/p/DI9ocUpg7g4/?utm_source=ig_web_copy_link&igsh=M2tuZDVsbW5uejBu"
   },
   {
     quote: "In my journey through college applications, QCC supported me by encouraging me to take part in activities which reflected my interest in my intended major. In particular, they helped me showcase the honours I had accumulated over the years to create a lasting impression on the admission officers' minds. Truly indebted to them to help my dream to study abroad come true.",
     name: "Hafi Shaheer Khan",
     designation: "Duke Kunshan",
-    src: "/hafi.jpeg",
+    src: "/hafi.webp",
     gradient: "from-amber-600/20 to-blue-600/20",
     instagramUrl: "https://www.instagram.com/p/DJAGypng5b-/?utm_source=ig_web_copy_link&igsh=MzZybG8xajdteGlv"
   },
@@ -47,23 +57,15 @@ const TESTIMONIALS_DATA = [
     quote: "From brainstorming to final drafts, QCC guided me through every essay with care and clarity. They helped me find meaning in moments I'd overlooked and made the whole process feel a lot less overwhelming. Even in the busiest stretches, their support felt steady and thoughtful. Their guidance turned a stressful journey into something empowering.",
     name: "Rida Habib",
     designation: "Minerva University",
-    src: "/WhatsApp Image 2025-05-30 at 17.58.07.jpeg",
+    src: "/rida.webp",
     gradient: "from-blue-600/20 to-amber-600/20",
     instagramUrl: "https://www.instagram.com/p/DKSMtNDo_vN/?utm_source=ig_web_copy_link&igsh=dGhkZThsMWthaTI5"
-  },
-  {
-    quote: "I remember sending QCC my first draft thinking it was pretty solid. They sent it back, torn apart in the best way. Every sentence was challenged. Every idea had to earn its place. It wasn't easy, but it was exactly what I needed. They didn't just help me write essays. They made sure I understood my story. QCC pushed me, sharpened my thinking, and made me better. Wouldn't have made it without them.",
-    name: "Ahmed Bajwa",
-    designation: "Imperial college London",
-    src: "/bajwa.jpeg",
-    gradient: "from-blue-600/20 to-amber-600/20",
-    instagramUrl: "https://www.instagram.com/p/DKPqS38IOt1/?utm_source=ig_web_copy_link&igsh=N3A2eHFjaGZlMjJj"
   },
   {
     quote: "The essay guidance I received was incredible. They helped me find my voice and tell my story in a way that felt genuine and compelling. I'm grateful for their expertise and support throughout the process.",
     name: "Shahvaiz Alvi",
     designation: "Union College",
-    src: "/shah.jpeg",
+    src: "/shah.webp",
     gradient: "from-blue-600/20 to-amber-600/20",
     instagramUrl: "https://www.instagram.com/p/DJ971XgAgFb/?utm_source=ig_web_copy_link&igsh=MWtyZXo0YTM1Ymx0eg=="
   },
@@ -71,7 +73,7 @@ const TESTIMONIALS_DATA = [
     quote: "I came in with stories from startups, trading, and tech but didn't know how to put them together. QCC helped me build a clear strategy and made sure my essays actually sounded like me. Their feedback made the whole process simple and real.",
     name: "Muhammad Hassnain Khan",
     designation: "Minerva University",
-    src: "/hasnain.jpeg",
+    src: "/hasnain.webp",
     gradient: "from-blue-600/20 to-amber-600/20",
     instagramUrl: "https://www.instagram.com/p/DJUpff6AROc/?utm_source=ig_web_copy_link&igsh=ZjBtdzRwNmdvczFi"
   }
@@ -132,6 +134,44 @@ interface Testimonial {
   originalIndex?: number;
 }
 
+// Optimized image component with proper sizing and fallbacks
+interface OptimizedImageProps {
+  src: string;
+  alt: string;
+  name: string;
+  onError: (e: React.SyntheticEvent<HTMLImageElement>) => void;
+}
+
+const OptimizedImage: React.FC<OptimizedImageProps> = ({ src, alt, name, onError }) => {
+  const initials = useMemo(() => 
+    name.split(' ').map(n => n[0]).join(''), 
+    [name]
+  );
+
+  return (
+    <>
+      <img
+        src={src}
+        alt={alt}
+        width={48}
+        height={48}
+        className="w-12 h-12 rounded-full object-cover"
+        loading="lazy"
+        draggable={false}
+        onError={onError}
+        style={{ 
+          aspectRatio: '1/1',
+          objectFit: 'cover',
+          objectPosition: 'center'
+        }}
+      />
+      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-blue-500 flex items-center justify-center text-white font-semibold text-sm hidden">
+        {initials}
+      </div>
+    </>
+  );
+};
+
 // Memoized testimonial card component
 interface TestimonialCardProps {
   testimonial: Testimonial;
@@ -146,11 +186,6 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({ testimonial, index, i
     const sibling = e.currentTarget.nextElementSibling;
     if (sibling && (sibling as HTMLElement).style) (sibling as HTMLElement).style.display = 'flex';
   }, []);
-
-  const initials = useMemo(() => 
-    testimonial.name.split(' ').map(n => n[0]).join(''), 
-    [testimonial.name]
-  );
 
   return (
     <div
@@ -190,17 +225,12 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({ testimonial, index, i
           <div className="flex items-center gap-4 pt-6 border-t border-gray-100/50">
             <div className="relative">
               <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-50 to-amber-50 flex items-center justify-center border-2 border-white shadow-sm">
-                <img
+                <OptimizedImage
                   src={testimonial.src}
                   alt={`${testimonial.name} - QCC Student Success Story`}
-                  className="w-12 h-12 rounded-full object-cover"
-                  loading="lazy"
-                  draggable={false}
+                  name={testimonial.name}
                   onError={handleImageError}
                 />
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-blue-500 flex items-center justify-center text-white font-semibold text-sm hidden">
-                  {initials}
-                </div>
               </div>
             </div>
             
