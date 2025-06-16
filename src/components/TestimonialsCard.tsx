@@ -38,7 +38,7 @@ export default function TestimonialsCard() {
       instagramUrl: "https://www.instagram.com/p/DKC7y2KoZ_Y/?utm_source=ig_web_copy_link&igsh=MTY4czAwM2hpdnd5aw=="
     },
     {
-      quote: "The personalized approach at College Crafters made all the difference. They didn't just help me with applications - they helped me discover my strengths and present them authentically. I couldn't have done it without their support.",
+      quote: "The QCC team supported me throughout my college application journey with guidance at every step. They helped organize my activities and honors, and worked closely with me to craft a personal statement that reflected my identity and experiences as an Afghan girl. Their insight was especially valuable in turning my four-year gap into a powerful story of resilience. Thanks to QCC, I navigated a stressful process with clarity and strength.",
       name: "Niloufar Rasouli",
       designation: "Carleton College",
       src: "/niloufar.jpeg",
