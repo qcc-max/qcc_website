@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-// Memoized services data to prevent recreation on every render
+// Static data moved outside component to prevent recreation
 const SERVICES_DATA = [
   {
     id: 1,
@@ -73,59 +73,40 @@ const SERVICES_DATA = [
     color: "blue",
     features: ["Path Exploration", "Career Mapping", "Industry Insights", "Future Planning"]
   },
-] as const;
+];
 
-// Memoized CSS styles to prevent recreation
+// Static CSS - moved outside component
 const CSS_STYLES = `
-  .scale-101 {
-    transform: scale(1.01);
-  }
-
-  .scale-102 {
-    transform: scale(1.02);
-  }
-
+  .scale-101 { transform: scale(1.01); }
+  .scale-102 { transform: scale(1.02); }
   .line-clamp-1 {
     display: -webkit-box;
     -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
   @keyframes wiggle {
     0%, 100% { transform: rotate(0deg) scale(1); }
     25% { transform: rotate(15deg) scale(1.05); }
     50% { transform: rotate(0deg) scale(1.1); }
     75% { transform: rotate(-15deg) scale(1.05); }
   }
-
   @keyframes float {
     0%, 100% { transform: translateY(0px) rotate(0deg); }
     50% { transform: translateY(-8px) rotate(1deg); }
   }
-
   @keyframes float-medium {
     0%, 100% { transform: translateY(0px) rotate(0deg); }
     50% { transform: translateY(-6px) rotate(-2deg); }
   }
-
   @keyframes float-slow {
     0%, 100% { transform: translateY(0px) rotate(0deg); }
     50% { transform: translateY(-10px) rotate(1deg); }
   }
-
   @keyframes pulse-fast {
     0%, 100% { opacity: 0.3; transform: scale(1); }
     50% { opacity: 0.5; transform: scale(1.1); }
   }
-
   @keyframes star-pulse {
     0% { transform: rotate(0deg) scale(1); }
     25% { transform: rotate(15deg) scale(1.2); }
@@ -133,23 +114,146 @@ const CSS_STYLES = `
     75% { transform: rotate(-15deg) scale(1.2); }
     100% { transform: rotate(0deg) scale(1); }
   }
-
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  .animate-float-medium {
-    animation: float-medium 8s ease-in-out infinite;
-  }
-
-  .animate-float-slow {
-    animation: float-slow 10s ease-in-out infinite;
-  }
-
-  .animate-pulse-fast {
-    animation: pulse-fast 3s ease-in-out infinite;
-  }
+  .animate-float { animation: float 6s ease-in-out infinite; }
+  .animate-float-medium { animation: float-medium 8s ease-in-out infinite; }
+  .animate-float-slow { animation: float-slow 10s ease-in-out infinite; }
+  .animate-pulse-fast { animation: pulse-fast 3s ease-in-out infinite; }
 `;
+
+// TypeScript interface for ServiceItem props
+interface ServiceItemProps {
+  service: {
+    id: number;
+    title: string;
+    icon: React.ComponentType<any>;
+    description: string;
+    color: string;
+    features: string[];
+  };
+  index: number;
+  isActive: boolean;
+  isVisible: boolean;
+  onSelect: (serviceId: number) => void;
+}
+
+// Memoized service item component
+const ServiceItem: React.FC<ServiceItemProps> = React.memo(({ 
+  service, 
+  index, 
+  isActive, 
+  isVisible, 
+  onSelect 
+}) => {
+  const ServiceIcon = service.icon;
+  
+  return (
+    <div
+      className={`
+        cursor-pointer p-3 rounded-xl border transition-all duration-300 transform will-change-transform
+        ${isActive
+          ? service.color === 'blue'
+            ? 'bg-blue-50 border-blue-200 shadow-md scale-102'
+            : 'bg-amber-50 border-amber-200 shadow-md scale-102'
+          : 'bg-white/80 border-gray-200 hover:border-gray-300 hover:shadow-sm hover:scale-101'
+        }
+      `}
+      style={{
+        opacity: isVisible ? 1 : 0,
+        transform: `translateX(${isVisible ? 0 : -20}px) ${isActive ? 'scale(1.02)' : 'scale(1)'}`,
+        transitionDelay: `${index * 0.08}s`
+      }}
+      onClick={() => onSelect(service.id)}
+    >
+      <div className="flex items-center space-x-3">
+        <div
+          className={`
+            w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0
+            ${isActive
+              ? service.color === 'blue'
+                ? 'bg-blue-500 text-white shadow-blue-500/30'
+                : 'bg-amber-500 text-white shadow-amber-500/30'
+              : 'bg-gray-100 text-gray-600'
+            }
+            transition-all duration-300 shadow-md
+          `}
+        >
+          {String(service.id).padStart(2, '0')}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center space-x-2 mb-1">
+            <ServiceIcon
+              size={14}
+              className={`
+                flex-shrink-0
+                ${isActive
+                  ? service.color === 'blue'
+                    ? 'text-blue-600'
+                    : 'text-amber-600'
+                  : 'text-gray-500'
+                }
+              `}
+            />
+            <h4
+              className={`
+                font-medium text-sm
+                ${isActive
+                  ? service.color === 'blue'
+                    ? 'text-blue-700'
+                    : 'text-amber-700'
+                  : 'text-gray-700'
+                }
+              `}
+            >
+              {service.title}
+            </h4>
+          </div>
+         
+          {!isActive && (
+            <p className="text-xs text-gray-500 line-clamp-1 leading-relaxed">
+              {service.description.substring(0, 50)}...
+            </p>
+          )}
+        </div>
+
+        <div className="flex-shrink-0">
+          {isActive ? (
+            <div
+              className={`
+                w-1 h-6 rounded-full
+                ${service.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500'}
+              `}
+            />
+          ) : (
+            <div className="w-1 h-6" />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+ServiceItem.displayName = 'ServiceItem';
+
+// Memoized floating elements component
+const FloatingElements = React.memo(() => (
+  <div className="hidden xl:block">
+    <div className="absolute top-1/4 left-[5%] animate-float-slow opacity-10">
+      <PenTool size={40} className="text-blue-600" />
+    </div>
+    <div className="absolute top-1/4 right-[5%] animate-float-medium opacity-10">
+      <Star size={32} className="text-amber-600" />
+    </div>
+    <div className="absolute bottom-1/4 left-[5%] animate-float opacity-10">
+      <Award size={36} className="text-blue-600" />
+    </div>
+    <div className="absolute bottom-1/4 right-[5%] animate-float-slow opacity-10">
+      <BookMarked size={32} className="text-amber-600" />
+    </div>
+  </div>
+));
+
+FloatingElements.displayName = 'FloatingElements';
 
 export default function ServicesCard() {
   const navigate = useNavigate();
@@ -159,10 +263,10 @@ export default function ServicesCard() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const sectionRef = useRef<HTMLElement | null>(null);
 
-  // Memoized callback to prevent recreation on every render
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLElement>) => {
-    if (sectionRef.current) {
-      const rect = sectionRef.current.getBoundingClientRect();
+  // Throttled mouse move handler
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const rect = sectionRef.current?.getBoundingClientRect();
+    if (rect) {
       setMousePosition({
         x: e.clientX - rect.left,
         y: e.clientY - rect.top
@@ -170,26 +274,26 @@ export default function ServicesCard() {
     }
   }, []);
 
-  // Memoized callback for navigation
   const handleGetStarted = useCallback(() => {
     navigate('/book');
   }, [navigate]);
 
-  // Memoized callback for service selection
   const handleServiceSelect = useCallback((serviceId: number) => {
     setActiveService(serviceId);
   }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 200);
+    return () => clearTimeout(timer);
+  }, []);
 
+  // Intersection observer effect
+  useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            setIsVisible(true);
-          }
-        });
+        if (entries[0]?.isIntersecting) {
+          setIsVisible(true);
+        }
       },
       { threshold: 0.1 }
     );
@@ -200,7 +304,6 @@ export default function ServicesCard() {
     }
 
     return () => {
-      clearTimeout(timer);
       if (currentRef) {
         observer.unobserve(currentRef);
       }
@@ -213,12 +316,12 @@ export default function ServicesCard() {
     [activeService]
   );
 
-  const ActiveIcon = activeServiceData?.icon;
-
   // Memoized mouse position style
   const mousePositionStyle = useMemo(() => ({
     background: `radial-gradient(circle 250px at ${mousePosition.x}px ${mousePosition.y}px, rgba(59, 130, 246, 0.1), transparent)`
   }), [mousePosition.x, mousePosition.y]);
+
+  const ActiveIcon = activeServiceData?.icon;
 
   return (
     <section
@@ -243,19 +346,8 @@ export default function ServicesCard() {
         style={mousePositionStyle}
       />
 
-      {/* Floating elements - Only render on larger screens to reduce DOM complexity */}
-      <div className="hidden xl:block absolute top-1/4 left-[5%] animate-float-slow opacity-10">
-        <PenTool size={40} className="text-blue-600" />
-      </div>
-      <div className="hidden xl:block absolute top-1/4 right-[5%] animate-float-medium opacity-10">
-        <Star size={32} className="text-amber-600" />
-      </div>
-      <div className="hidden xl:block absolute bottom-1/4 left-[5%] animate-float opacity-10">
-        <Award size={36} className="text-blue-600" />
-      </div>
-      <div className="hidden xl:block absolute bottom-1/4 right-[5%] animate-float-slow opacity-10">
-        <BookMarked size={32} className="text-amber-600" />
-      </div>
+      {/* Floating elements */}
+      <FloatingElements />
 
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
@@ -266,12 +358,9 @@ export default function ServicesCard() {
               <span className="font-serif italic font-semibold bg-gradient-to-r from-blue-700 via-blue-600 to-blue-500 bg-clip-text text-transparent ml-3 pr-1">services</span>
             </h2>
           
-            {/* Animated star */}
             <span
               className="absolute -right-6 -top-1 text-xl text-amber-500 not-italic"
-              style={{
-                animation: 'star-pulse 5s ease-in-out infinite'
-              }}
+              style={{ animation: 'star-pulse 5s ease-in-out infinite' }}
             >
               ✦
             </span>
@@ -284,113 +373,28 @@ export default function ServicesCard() {
           </p>
         </div>
 
-        {/* Main Content - Balanced 50/50 layout */}
+        {/* Main Content */}
         <div className="grid lg:grid-cols-2 gap-6">
          
-          {/* Service Navigation - Left Side */}
+          {/* Service Navigation */}
           <div className="order-2 lg:order-1">
             <div className="sticky top-6">
               <div className="space-y-2">
-                {SERVICES_DATA.map((service, index) => {
-                  const ServiceIcon = service.icon;
-                  const isActive = activeService === service.id;
-                  
-                  return (
-                    <div
-                      key={service.id}
-                      className={`
-                        cursor-pointer p-3 rounded-xl border transition-all duration-300 transform will-change-transform
-                        ${isActive
-                          ? service.color === 'blue'
-                            ? 'bg-blue-50 border-blue-200 shadow-md scale-102'
-                            : 'bg-amber-50 border-amber-200 shadow-md scale-102'
-                          : 'bg-white/80 border-gray-200 hover:border-gray-300 hover:shadow-sm hover:scale-101'
-                        }
-                      `}
-                      style={{
-                        opacity: isVisible ? 1 : 0,
-                        transform: `translateX(${isVisible ? 0 : -20}px) ${isActive ? 'scale(1.02)' : 'scale(1)'}`,
-                        transitionDelay: `${index * 0.08}s`
-                      }}
-                      onClick={() => handleServiceSelect(service.id)}
-                    >
-                      <div className="flex items-center space-x-3">
-                        {/* Service Number */}
-                        <div
-                          className={`
-                            w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0
-                            ${isActive
-                              ? service.color === 'blue'
-                                ? 'bg-blue-500 text-white shadow-blue-500/30'
-                                : 'bg-amber-500 text-white shadow-amber-500/30'
-                              : 'bg-gray-100 text-gray-600'
-                            }
-                            transition-all duration-300 shadow-md
-                          `}
-                        >
-                          {String(service.id).padStart(2, '0')}
-                        </div>
-
-                        {/* Service Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <ServiceIcon
-                              size={14}
-                              className={`
-                                flex-shrink-0
-                                ${isActive
-                                  ? service.color === 'blue'
-                                    ? 'text-blue-600'
-                                    : 'text-amber-600'
-                                  : 'text-gray-500'
-                                }
-                              `}
-                            />
-                            <h4
-                              className={`
-                                font-medium text-sm
-                                ${isActive
-                                  ? service.color === 'blue'
-                                    ? 'text-blue-700'
-                                    : 'text-amber-700'
-                                  : 'text-gray-700'
-                                }
-                              `}
-                            >
-                              {service.title}
-                            </h4>
-                          </div>
-                         
-                          {/* Preview text for non-active services */}
-                          {!isActive && (
-                            <p className="text-xs text-gray-500 line-clamp-1 leading-relaxed">
-                              {service.description.substring(0, 50)}...
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Active indicator */}
-                        <div className="flex-shrink-0">
-                          {isActive ? (
-                            <div
-                              className={`
-                                w-1 h-6 rounded-full
-                                ${service.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500'}
-                              `}
-                            />
-                          ) : (
-                            <div className="w-1 h-6" />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {SERVICES_DATA.map((service, index) => (
+                  <ServiceItem
+                    key={service.id}
+                    service={service}
+                    index={index}
+                    isActive={activeService === service.id}
+                    isVisible={isVisible}
+                    onSelect={handleServiceSelect}
+                  />
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Active Service Content - Right Side */}
+          {/* Active Service Content */}
           <div className="order-1 lg:order-2">
             {activeServiceData && (
               <div
@@ -406,7 +410,7 @@ export default function ServicesCard() {
                 }}
               >
                 <div className="relative bg-white rounded-[38px] p-8 shadow-xl border border-blue-200 overflow-hidden">
-                  {/* Animated background glow effect */}
+                  {/* Animated background glow */}
                   <div className="absolute inset-0 opacity-40">
                     <div
                       className={`absolute w-1/2 h-1/2 bg-blue-100 rounded-full blur-3xl ${isHovered ? 'animate-pulse-fast' : 'animate-pulse'}`}
@@ -430,9 +434,7 @@ export default function ServicesCard() {
                           }
                         `}
                       >
-                        {ActiveIcon && (
-                          <ActiveIcon size={24} className="text-white" />
-                        )}
+                        {ActiveIcon && <ActiveIcon size={24} className="text-white" />}
                       </div>
                      
                       <div className="flex-1 min-w-0">
@@ -462,7 +464,7 @@ export default function ServicesCard() {
                       </div>
                     </div>
 
-                    {/* Description in styled container */}
+                    {/* Description */}
                     <div className="bg-gray-50/80 rounded-3xl p-6 mb-6 border border-gray-100/50">
                       <p className="text-gray-700 text-base leading-relaxed font-light">
                         {activeServiceData.description}
@@ -534,7 +536,6 @@ export default function ServicesCard() {
         </div>
       </div>
 
-      {/* CSS animations - Render once */}
       <style dangerouslySetInnerHTML={{ __html: CSS_STYLES }} />
     </section>
   );

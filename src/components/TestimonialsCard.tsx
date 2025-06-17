@@ -1,8 +1,17 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { Star, BookOpen, Quote, ChevronLeft, ChevronRight, GraduationCap } from 'lucide-react';
 
+interface Testimonial {
+  quote: string;
+  name: string;
+  designation: string;
+  src: string;
+  gradient: string;
+  instagramUrl: string;
+}
+
 // Memoized testimonial data to prevent re-creation on every render
-const TESTIMONIALS_DATA = [
+const TESTIMONIALS_DATA: Testimonial[] = [
   {
     quote: "I'm grateful I started working with QCC early, as it helped structure my entire college application process. They guided me in building a strong activity list, refining my Common App essay, and weaving my extracurriculars into a cohesive story. Their university selection advice was excellent, and they continued to support me through the visa process. Their expertise truly made a difference.",
     name: "Muhammed Umer Bhatti",
@@ -11,8 +20,7 @@ const TESTIMONIALS_DATA = [
     gradient: "from-amber-400/20 to-blue-500/20",
     instagramUrl: "https://www.instagram.com/p/DI6tN_7IwwF/?utm_source=ig_web_copy_link&igsh=MTMwNGRyZGE2Znloeg=="
   },
-
-   {
+  {
     quote: "The QCC team supported me throughout my college application journey with guidance at every step. They helped organize my activities and honors, and worked closely with me to craft a personal statement that reflected my identity and experiences as an Afghan girl. Their insight was especially valuable in turning my four-year gap into a powerful story of resilience. Thanks to QCC, I navigated a stressful process with clarity and strength.",
     name: "Niloufar Rasouli",
     designation: "Carleton College",
@@ -20,7 +28,7 @@ const TESTIMONIALS_DATA = [
     gradient: "from-blue-500/20 to-amber-400/20",
     instagramUrl: "https://www.instagram.com/p/DI9ocUpg7g4/?utm_source=ig_web_copy_link&igsh=M2tuZDVsbW5uejBu"
   },
-    {
+  {
     quote: "I remember sending QCC my first draft thinking it was pretty solid. They sent it back, torn apart in the best way. Every sentence was challenged. Every idea had to earn its place. It wasn't easy, but it was exactly what I needed. They didn't just help me write essays. They made sure I understood my story. QCC pushed me, sharpened my thinking, and made me better. Wouldn't have made it without them.",
     name: "Ahmed Bajwa",
     designation: "Imperial college London",
@@ -28,7 +36,6 @@ const TESTIMONIALS_DATA = [
     gradient: "from-blue-600/20 to-amber-600/20",
     instagramUrl: "https://www.instagram.com/p/DKPqS38IOt1/?utm_source=ig_web_copy_link&igsh=N3A2eHFjaGZlMjJj"
   },
-
   {
     quote: "I came in with big goals but wasn't sure how to bring everything together. QCC helped me craft essays that truly reflected who I am — from research to extracurriculars. Their feedback was always thoughtful and sharp, and their support kept me grounded through the most stressful parts of the process. They also constantly kept me updated about scholarship opportunities around the world, which helped me stay ahead and focused.",
     name: "Maaz Habib",
@@ -80,7 +87,7 @@ const TESTIMONIALS_DATA = [
 ];
 
 // Memoized decorative icons component
-const DecorativeIcons = () => (
+const DecorativeIcons = memo(() => (
   <>
     <div className="absolute top-[15%] left-[8%] animate-float-elegant opacity-8">
       <BookOpen size={36} className="text-blue-600/30" />
@@ -92,10 +99,10 @@ const DecorativeIcons = () => (
       <Quote size={34} className="text-blue-600/30" />
     </div>
   </>
-);
+));
 
 // Memoized background elements component
-const BackgroundElements = () => (
+const BackgroundElements = memo(() => (
   <>
     <div
       className="absolute top-[10%] left-[-8%] w-4/5 h-3/5 bg-gradient-to-br from-amber-300/15 via-amber-200/10 to-transparent rounded-full blur-3xl animate-pulse"
@@ -121,28 +128,17 @@ const BackgroundElements = () => (
       }}
     />
   </>
-);
+));
 
-// Testimonial type definition
-interface Testimonial {
-  quote: string;
-  name: string;
-  designation: string;
-  src: string;
-  gradient: string;
-  instagramUrl: string;
-  originalIndex?: number;
-}
-
-// Optimized image component with proper sizing and fallbacks
 interface OptimizedImageProps {
   src: string;
   alt: string;
   name: string;
-  onError: (e: React.SyntheticEvent<HTMLImageElement>) => void;
+  onError: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
 }
 
-const OptimizedImage: React.FC<OptimizedImageProps> = ({ src, alt, name, onError }) => {
+// Optimized image component with proper sizing and fallbacks
+const OptimizedImage = memo(({ src, alt, name, onError }: OptimizedImageProps) => {
   const initials = useMemo(() => 
     name.split(' ').map(n => n[0]).join(''), 
     [name]
@@ -170,22 +166,27 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({ src, alt, name, onError
       </div>
     </>
   );
-};
+});
 
-// Memoized testimonial card component
 interface TestimonialCardProps {
-  testimonial: Testimonial;
+  testimonial: Testimonial & { originalIndex?: number };
   index: number;
   isAnimating: boolean;
-  onCardClick: (instagramUrl: string) => void;
+  onCardClick: (url: string) => void;
 }
 
-const TestimonialCard: React.FC<TestimonialCardProps> = ({ testimonial, index, isAnimating, onCardClick }) => {
-  const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-    e.currentTarget.style.display = 'none';
-    const sibling = e.currentTarget.nextElementSibling;
-    if (sibling && (sibling as HTMLElement).style) (sibling as HTMLElement).style.display = 'flex';
+// Memoized testimonial card component
+const TestimonialCard = memo(({ testimonial, index, isAnimating, onCardClick }: TestimonialCardProps) => {
+  const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = e.currentTarget;
+    target.style.display = 'none';
+    const sibling = target.nextElementSibling as HTMLElement;
+    if (sibling) sibling.style.display = 'flex';
   }, []);
+
+  const handleClick = useCallback(() => {
+    onCardClick(testimonial.instagramUrl);
+  }, [testimonial.instagramUrl, onCardClick]);
 
   return (
     <div
@@ -193,7 +194,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({ testimonial, index, i
         isAnimating ? 'animate-slide-up' : ''
       }`}
       style={{ animationDelay: `${index * 100}ms` }}
-      onClick={() => onCardClick(testimonial.instagramUrl)}
+      onClick={handleClick}
     >
       <div className="relative bg-white rounded-3xl p-8 shadow-lg shadow-gray-200/50 border border-gray-100/50 hover:shadow-xl hover:shadow-gray-200/60 transition-all duration-500 hover:-translate-y-2 h-full">
         {/* Gradient overlay */}
@@ -252,10 +253,10 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({ testimonial, index, i
       </div>
     </div>
   );
-};
+});
 
 // Memoized animated star component
-const AnimatedStar = () => {
+const AnimatedStar = memo(() => {
   const [rotation, setRotation] = useState(0);
   const [scale, setScale] = useState(1);
 
@@ -278,7 +279,32 @@ const AnimatedStar = () => {
       ✦
     </span>
   );
-};
+});
+
+interface DecorativeWordProps {
+  word: string;
+  index: number;
+}
+
+// Decorative word component
+const DecorativeWord = memo(({ word, index }: DecorativeWordProps) => {
+  const [hovered, setHovered] = useState(false);
+  
+  return (
+    <span
+      className="opacity-70 text-gray-600 cursor-default transition-all duration-300"
+      style={{
+        opacity: hovered ? 1 : 0.7,
+        transform: hovered ? `translateY(-5px) rotate(${index % 2 === 0 ? 15 : -15}deg) scale(1.2)` : 'none',
+        color: hovered ? '#F59E0B' : '#4B5563'
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {word}
+    </span>
+  );
+});
 
 // Main component
 export default function TestimonialsCard() {
@@ -286,8 +312,8 @@ export default function TestimonialsCard() {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Memoize testimonials to prevent unnecessary re-renders
-  const testimonials = useMemo(() => TESTIMONIALS_DATA, []);
+  // Prevent re-renders by caching the testimonials array
+  const testimonials = TESTIMONIALS_DATA;
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 200);
@@ -297,14 +323,15 @@ export default function TestimonialsCard() {
   const handleNavigation = useCallback((direction: 'next' | 'prev') => {
     if (isAnimating) return;
     setIsAnimating(true);
+    
+    const step = direction === 'next' ? 3 : -3;
+    const newIndex = (currentIndex + step + testimonials.length) % testimonials.length;
+    
     setTimeout(() => {
-      setCurrentIndex((prev) => {
-        const step = direction === 'next' ? 3 : -3;
-        return (prev + step + testimonials.length) % testimonials.length;
-      });
+      setCurrentIndex(newIndex);
       setIsAnimating(false);
     }, 300);
-  }, [isAnimating, testimonials.length]);
+  }, [isAnimating, currentIndex, testimonials.length]);
 
   const handleNext = useCallback(() => handleNavigation('next'), [handleNavigation]);
   const handlePrev = useCallback(() => handleNavigation('prev'), [handleNavigation]);
@@ -323,7 +350,7 @@ export default function TestimonialsCard() {
   }, []);
 
   const visibleTestimonials = useMemo(() => {
-    const visible = [];
+    const visible: (Testimonial & { originalIndex: number })[] = [];
     for (let i = 0; i < 3; i++) {
       const index = (currentIndex + i) % testimonials.length;
       visible.push({ ...testimonials[index], originalIndex: index });
@@ -331,9 +358,7 @@ export default function TestimonialsCard() {
     return visible;
   }, [currentIndex, testimonials]);
 
-  const decorativeWords = useMemo(() => 
-    ['✦', 'success', 'stories', 'that', 'inspire', '✦'], []
-  );
+  const decorativeWords = ['✦', 'success', 'stories', 'that', 'inspire', '✦'];
 
   return (
     <section id="testimonials" className="py-20 px-6 bg-stone-100 relative overflow-hidden">
@@ -418,24 +443,9 @@ export default function TestimonialsCard() {
 
         {/* Bottom decorative text */}
         <div className="mt-16 w-full flex justify-center gap-2 text-sm">
-          {decorativeWords.map((word, index) => {
-            const [hovered, setHovered] = useState(false);
-            return (
-              <span
-                key={index}
-                className="opacity-70 text-gray-600 cursor-default transition-all duration-300"
-                style={{
-                  opacity: hovered ? 1 : 0.7,
-                  transform: hovered ? `translateY(-5px) rotate(${index % 2 === 0 ? 15 : -15}deg) scale(1.2)` : 'none',
-                  color: hovered ? '#F59E0B' : '#4B5563'
-                }}
-                onMouseEnter={() => setHovered(true)}
-                onMouseLeave={() => setHovered(false)}
-              >
-                {word}
-              </span>
-            );
-          })}
+          {decorativeWords.map((word, index) => (
+            <DecorativeWord key={index} word={word} index={index} />
+          ))}
         </div>
       </div>
 
