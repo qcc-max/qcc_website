@@ -1,8 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { motion } from 'framer-motion';
-import { GraduationCap, Users } from 'lucide-react';
-import DottedMap from 'dotted-map';
 import { useMemo, memo, useRef, useEffect, useState, useCallback } from 'react';
 
 // Types
@@ -17,37 +15,49 @@ type WorldMapProps = {
   dotColor?: string;
 };
 
-// Memoized WorldMap Component with lazy loading
+type StatsCardProps = {
+  studentCount?: string;
+  countryCount?: string;
+};
+
+// Inline critical icons as SVG to avoid Lucide bundle overhead
+const GraduationCapIcon = memo(() => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500 w-4 h-4 sm:w-5 sm:h-5">
+    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+  </svg>
+));
+
+const UsersIcon = memo(() => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500 w-4 h-4 sm:w-5 sm:h-5">
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+    <circle cx="9" cy="7" r="4"/>
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+  </svg>
+));
+
+// Memoized WorldMap Component with SVG from public folder
 const WorldMap = memo(({
   dots = [],
   lineColor = "#0ea5e9",
-  dotColor = "#374151",
 }: WorldMapProps) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
 
   // Memoize expensive calculations
-  const { svgMap, projectedDots } = useMemo(() => {
-    const map = new DottedMap({ height: 100, grid: "diagonal" });
-    const svg = map.getSVG({
-      radius: 0.22,
-      color: dotColor,
-      shape: "circle",
-      backgroundColor: "transparent",
-    });
-
+  const projectedDots = useMemo(() => {
     const projectPoint = (lat: number, lng: number) => ({
       x: (lng + 180) * (800 / 360),
       y: (90 - lat) * (400 / 180)
     });
 
-    const projected = dots.map(dot => ({
+    return dots.map(dot => ({
       start: projectPoint(dot.start.lat, dot.start.lng),
       end: projectPoint(dot.end.lat, dot.end.lng)
     }));
-
-    return { svgMap: svg, projectedDots: projected };
-  }, [dots, dotColor]);
+  }, [dots]);
 
   // Intersection Observer for lazy loading
   useEffect(() => {
@@ -68,17 +78,27 @@ const WorldMap = memo(({
     return () => observer.disconnect();
   }, []);
 
-  const createCurvedPath = (start: { x: number; y: number }, end: { x: number; y: number }) => {
+  const createCurvedPath = useCallback((start: { x: number; y: number }, end: { x: number; y: number }) => {
     const midY = Math.min(start.y, end.y) - 50;
     return `M ${start.x} ${start.y} Q ${(start.x + end.x) / 2} ${midY} ${end.x} ${end.y}`;
-  };
+  }, []);
+
+  const handleImageLoad = useCallback(() => {
+    setIsLoaded(true);
+  }, []);
+
+  const handleImageError = useCallback(() => {
+    console.warn('Failed to load worldmap.svg from public folder');
+    setIsLoaded(true); // Still set to true to show the connections
+  }, []);
 
   return (
     <div ref={mapRef} className="w-full aspect-[2/1] relative">
       {isVisible && (
         <>
+          {/* Load SVG from public folder */}
           <img
-            src={`data:image/svg+xml;utf8,${encodeURIComponent(svgMap)}`}
+            src="/worldmap.svg"
             className="h-full w-full opacity-40 pointer-events-none select-none"
             style={{ 
               maskImage: 'linear-gradient(to bottom, transparent, white 10%, white 90%, transparent)',
@@ -87,8 +107,16 @@ const WorldMap = memo(({
             alt="world map"
             draggable={false}
             loading="lazy"
+            onLoad={handleImageLoad}
+            onError={handleImageError}
           />
           
+          {/* Show loading state until image loads */}
+          {!isLoaded && (
+            <div className="h-full w-full bg-gray-100 animate-pulse rounded absolute inset-0" />
+          )}
+          
+          {/* Connection lines and dots */}
           <svg
             viewBox="0 0 800 400"
             className="w-full h-full absolute inset-0 pointer-events-none select-none"
@@ -114,7 +142,7 @@ const WorldMap = memo(({
                   transition={{ 
                     duration: 1, 
                     delay: 0.2 * i, 
-                    ease: [0.25, 0.1, 0.25, 1] // More performant easing
+                    ease: [0.25, 0.1, 0.25, 1]
                   }}
                 />
                 
@@ -157,11 +185,6 @@ const WorldMap = memo(({
 WorldMap.displayName = 'WorldMap';
 
 // Optimized StatsCard Component with reduced re-renders
-type StatsCardProps = {
-  studentCount?: string;
-  countryCount?: string;
-};
-
 const StatsCard = memo(({ 
   studentCount = '500+', 
   countryCount = '15+',
@@ -179,7 +202,7 @@ const StatsCard = memo(({
       }}
     >
       <div className="flex flex-col items-center">
-        <Users className="text-blue-500 w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1" />
+        <UsersIcon />
         <span className="text-gray-800 font-bold text-sm sm:text-lg leading-none">{studentCount}</span>
         <span className="text-gray-500 text-xs sm:text-sm leading-none mt-0.5 sm:mt-1">Students</span>
       </div>
@@ -187,7 +210,7 @@ const StatsCard = memo(({
       <div className="w-px h-8 sm:h-12 bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
       
       <div className="flex flex-col items-center">
-        <GraduationCap className="text-amber-500 w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1" />
+        <GraduationCapIcon />
         <span className="text-gray-800 font-bold text-sm sm:text-lg leading-none">{countryCount}</span>
         <span className="text-gray-500 text-xs sm:text-sm leading-none mt-0.5 sm:mt-1">Countries</span>
       </div>
@@ -197,14 +220,14 @@ const StatsCard = memo(({
 
 StatsCard.displayName = 'StatsCard';
 
-// Optimized background animation component
+// Optimized background animation component with reduced DOM nodes
 const BackgroundAccents = memo(() => {
   const accents = useMemo(() => [
-    { top: '250%', right: '-5%', width: '60%', height: '40%', color: 'amber', delay: 15 },
-    { top: '38%', right: '20%', width: '50%', height: '50%', color: 'amber', delay: 22 },
-    { bottom: '10%', left: '-10%', width: '75%', height: '33%', color: 'blue', delay: 22 },
-    { top: '-20%', right: '-20%', width: '75%', height: '75%', color: 'blue', delay: 15 },
-    { bottom: '20%', left: '-10%', width: '60%', height: '40%', color: 'amber', delay: 20 },
+    { style: { top: '250%', right: '-5%', width: '60%', height: '40%' }, color: 'bg-amber-300/20', delay: 15 },
+    { style: { top: '38%', right: '20%', width: '50%', height: '50%' }, color: 'bg-amber-300/20', delay: 22 },
+    { style: { bottom: '10%', left: '-10%', width: '75%', height: '33%' }, color: 'bg-blue-300/20', delay: 22 },
+    { style: { top: '-20%', right: '-20%', width: '75%', height: '75%' }, color: 'bg-blue-300/20', delay: 15 },
+    { style: { bottom: '20%', left: '-10%', width: '60%', height: '40%' }, color: 'bg-amber-300/20', delay: 20 },
   ], []);
 
   return (
@@ -212,18 +235,12 @@ const BackgroundAccents = memo(() => {
       {accents.map((bg, i) => (
         <div
           key={i}
-          className={`absolute rounded-full blur-3xl animate-pulse will-change-auto ${
-            bg.color === 'amber' ? 'bg-amber-300/20' : 'bg-blue-300/20'
-          }`}
+          className={`absolute rounded-full blur-3xl animate-pulse will-change-transform ${bg.color}`}
           style={{
-            top: bg.top,
-            right: bg.right,
-            bottom: bg.bottom,
-            left: bg.left,
-            width: bg.width,
-            height: bg.height,
+            ...bg.style,
             animationDuration: `${bg.delay}s`,
-            transform: 'translateZ(0)', // Force hardware acceleration
+            transform: 'translate3d(0,0,0)',
+            backfaceVisibility: 'hidden',
           }}
         />
       ))}
@@ -233,9 +250,73 @@ const BackgroundAccents = memo(() => {
 
 BackgroundAccents.displayName = 'BackgroundAccents';
 
+// Pre-computed animation variants for better performance
+const titleVariants = {
+  initial: { opacity: 0, y: 30 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }
+};
+
+const buttonVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.7, delay: 0.3, ease: [0.25, 0.1, 0.25, 1] }
+};
+
+const subtextVariants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  transition: { duration: 0.7, delay: 0.5, ease: [0.25, 0.1, 0.25, 1] }
+};
+
+const mapVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.7, delay: 0.4, ease: [0.25, 0.1, 0.25, 1] }
+};
+
+// Optimized sparkle animation with reduced complexity
+const SparkleIcon = memo(() => (
+  <motion.span
+    className="absolute -top-2 left-3 text-lg text-amber-500 not-italic"
+    animate={{
+      rotate: [0, 15, 0, -15, 0],
+      scale: [1, 1.2, 1, 1.2, 1]
+    }}
+    transition={{
+      duration: 5,
+      repeat: Infinity,
+      ease: [0.25, 0.1, 0.25, 1]
+    }}
+  >
+    ✦
+  </motion.span>
+));
+
 // Main HeroCard Component
-export const HeroCard = () => {
+export const HeroCard = memo(() => {
   const navigate = useNavigate();
+  const [shouldLoadMap, setShouldLoadMap] = useState(false);
+  const mapSectionRef = useRef<HTMLDivElement>(null);
+
+  // Intersection observer for map lazy loading
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldLoadMap(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    if (mapSectionRef.current) {
+      observer.observe(mapSectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   // Memoize connection dots to prevent recalculation
   const connectionDots = useMemo(() => [
@@ -258,6 +339,11 @@ export const HeroCard = () => {
   const handleStartJourney = useCallback(() => navigate('/book'), [navigate]);
   const handleBookMeeting = useCallback(() => navigate('/book'), [navigate]);
 
+  // Memoize decorative text items
+  const decorativeItems = useMemo(() => 
+    ['✦', 'your', 'path', 'to', 'success', '✦'], []
+  );
+
   return (
     <section id="home" className="min-h-screen w-full pt-20 pb-12 bg-stone-100 relative overflow-hidden">
       {/* Optimized background accents */}
@@ -268,9 +354,7 @@ export const HeroCard = () => {
       <div className="max-w-7xl mx-auto flex flex-col items-center text-center relative z-10 px-4">
         <motion.div
           className="mb-6"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
+          {...titleVariants}
         >
           <h1 className="text-4xl md:text-5xl font-medium text-gray-800 mb-4">
             From applications to acceptances:{' '}
@@ -279,20 +363,7 @@ export const HeroCard = () => {
             </span>
             <span className="relative">
               !
-              <motion.span
-                className="absolute -top-2 left-3 text-lg text-amber-500 not-italic"
-                animate={{
-                  rotate: [0, 15, 0, -15, 0],
-                  scale: [1, 1.2, 1, 1.2, 1]
-                }}
-                transition={{
-                  duration: 5,
-                  repeat: Infinity,
-                  ease: [0.25, 0.1, 0.25, 1]
-                }}
-              >
-                ✦
-              </motion.span>
+              <SparkleIcon />
             </span>
           </h1>
 
@@ -308,9 +379,7 @@ export const HeroCard = () => {
 
         <motion.div
           className="flex flex-col sm:flex-row gap-3"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+          {...buttonVariants}
         >
           <Button
             onClick={handleStartJourney}
@@ -330,11 +399,9 @@ export const HeroCard = () => {
 
         <motion.div
           className="mt-8 flex justify-center gap-2 text-xs text-gray-400"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.7, delay: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+          {...subtextVariants}
         >
-          {['✦', 'your', 'path', 'to', 'success', '✦'].map((item, i) => (
+          {decorativeItems.map((item, i) => (
             <span
               key={i}
               className="opacity-70 hover:opacity-100 hover:text-amber-500 hover:-translate-y-1 hover:rotate-3 transition-all cursor-default"
@@ -344,31 +411,40 @@ export const HeroCard = () => {
           ))}
         </motion.div>
 
-        {/* World Map Section - Lazy loaded */}
+        {/* World Map Section - Conditionally rendered */}
         <motion.div
+          ref={mapSectionRef}
           className="mt-8 sm:mt-12 w-full max-w-5xl"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+          {...mapVariants}
           viewport={{ once: true, margin: '50px' }}
         >
           <div className="flex flex-col items-center">
             <h3 className="text-gray-800 text-sm sm:text-base font-medium flex items-center gap-2 mb-3 sm:mb-4">
-              <GraduationCap size={16} className="text-amber-500 sm:w-[18px] sm:h-[18px]" />
-              Our Global Student Network
+              <GraduationCapIcon />
+              <span>Our Global Student Network</span>
             </h3>
 
             <div className="w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[450px] relative mb-4 sm:mb-6">
-              <WorldMap dots={connectionDots} lineColor="#3B82F6" />
+              {shouldLoadMap ? (
+                <WorldMap dots={connectionDots} lineColor="#3B82F6" />
+              ) : (
+                <div className="w-full h-full bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
+                  <div className="text-gray-400 text-sm">Loading world map...</div>
+                </div>
+              )}
             </div>
 
-            <StatsCard 
-              studentCount="500+" 
-              countryCount="15+" 
-            />
+            {shouldLoadMap && (
+              <StatsCard 
+                studentCount="500+" 
+                countryCount="15+" 
+              />
+            )}
           </div>
         </motion.div>
       </div>
     </section>
   );
-};
+});
+
+HeroCard.displayName = 'HeroCard';
