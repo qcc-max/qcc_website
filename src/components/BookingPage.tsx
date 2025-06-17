@@ -1,28 +1,42 @@
-import { useState, useEffect, useCallback, memo } from 'react';
-import { BookOpen, Star, Award, BookMarked, Sparkles, LucideIcon } from 'lucide-react';
+import { useState, useEffect, useCallback, memo, useMemo, lazy, Suspense } from 'react';
+import { BookOpen, Star, Award, BookMarked, Sparkles, LucideProps } from 'lucide-react';
 
-// Memoized Tally Form Component with loading optimization
-const TallyForm = memo(() => (
-  <div className="mt-6">
-    <iframe
-      src="https://tally.so/r/wbAE97"
-      width="100%"
-      height="738"
-      title="Consultation Request Form"
-      frameBorder="0"
-      marginHeight={0}
-      marginWidth={0}
-      style={{ border: 'none' }}
-      loading="lazy"
-    />
+// Lazy load the TallyForm to reduce initial bundle size
+const LazyTallyForm = lazy(() => {
+  return new Promise<{ default: React.ComponentType }>((resolve) => {
+    // Add a small delay to prevent blocking main thread
+    setTimeout(() => {
+      resolve({
+        default: memo(() => (
+          <div className="mt-6">
+            <iframe
+              src="https://tally.so/r/wbAE97"
+              width="100%"
+              height="738"
+              title="Consultation Request Form"
+              frameBorder="0"
+              marginHeight={0}
+              marginWidth={0}
+              style={{ border: 'none' }}
+              loading="lazy"
+            />
+          </div>
+        ))
+      });
+    }, 100);
+  });
+});
+
+// Loading fallback component
+const FormSkeleton = memo(() => (
+  <div className="mt-6 h-[738px] bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
+    <div className="text-gray-400">Loading form...</div>
   </div>
 ));
 
-TallyForm.displayName = 'TallyForm';
-
 // Types for component props
 interface FloatingIconProps {
-  Icon: LucideIcon;
+  Icon: React.ForwardRefExoticComponent<Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>>;
   size: number;
   className: string;
   style?: React.CSSProperties;
@@ -31,16 +45,14 @@ interface FloatingIconProps {
 interface BenefitItemProps {
   title: string;
   desc: string;
-  index: number;
 }
 
 interface AnimatedWordProps {
   word: string;
-  index: number;
 }
 
 interface FloatingIconData {
-  Icon: LucideIcon;
+  Icon: React.ForwardRefExoticComponent<Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>>;
   size: number;
   className: string;
 }
@@ -50,16 +62,40 @@ interface BenefitData {
   desc: string;
 }
 
-// Memoized floating icon component
-const FloatingIcon = memo<FloatingIconProps>(({ Icon, size, className, style }) => (
-  <div className={className} style={style}>
-    <Icon size={size} />
-  </div>
-));
+// Constants moved outside component and frozen for better performance
+const BENEFITS_DATA: readonly BenefitData[] = Object.freeze([
+  { title: "Expert Guidance", desc: "Get advice from mentors at Ivy League & top universities" },
+  { title: "Personalized Strategy", desc: "Develop a unique roadmap for your college applications" },
+  { title: "Application Review", desc: "Get feedback on your essays and overall application" },
+  { title: "Program Matching", desc: "Find the best universities for your unique profile" }
+]);
+
+const BOTTOM_WORDS: readonly string[] = Object.freeze(['✦', 'start', 'your', 'journey', 'today', '✦']);
+
+const FLOATING_ICONS: readonly FloatingIconData[] = Object.freeze([
+  { Icon: BookOpen, size: 60, className: "absolute top-1/4 left-[10%] animate-float-slow opacity-20 text-blue-600" },
+  { Icon: Star, size: 40, className: "absolute top-1/3 right-[15%] animate-float-medium opacity-20 text-amber-600" },
+  { Icon: Award, size: 50, className: "absolute bottom-1/4 left-[20%] animate-float opacity-20 text-blue-600" },
+  { Icon: BookMarked, size: 45, className: "absolute bottom-1/3 right-[20%] animate-float-slow opacity-20 text-amber-600" }
+]);
+
+// Optimized floating icon component with reduced re-renders
+const FloatingIcon = memo<FloatingIconProps>(({ Icon, size, className, style }) => {
+  const combinedStyle = useMemo(() => ({
+    willChange: 'transform',
+    ...style
+  }), [style]);
+
+  return (
+    <div className={className} style={combinedStyle}>
+      <Icon size={size} />
+    </div>
+  );
+});
 
 FloatingIcon.displayName = 'FloatingIcon';
 
-// Memoized benefit item component
+// Optimized benefit item with reduced DOM operations
 const BenefitItem = memo<BenefitItemProps>(({ title, desc }) => (
   <div className="flex items-start gap-3 group hover:translate-x-1 transition-transform duration-300">
     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center flex-shrink-0 shadow-md transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6">
@@ -74,126 +110,144 @@ const BenefitItem = memo<BenefitItemProps>(({ title, desc }) => (
 
 BenefitItem.displayName = 'BenefitItem';
 
-// Memoized word component for bottom decoration
+// Simplified animated word component
 const AnimatedWord = memo<AnimatedWordProps>(({ word }) => (
-  <span
-    className="opacity-70 text-gray-600 cursor-default hover:opacity-100 hover:text-amber-600 hover:scale-110 hover:-translate-y-1 transition duration-300 inline-block"
-    style={{ transformOrigin: 'center' }}
-  >
+  <span className="opacity-70 text-gray-600 cursor-default hover:opacity-100 hover:text-amber-600 hover:scale-110 hover:-translate-y-1 transition duration-300 inline-block">
     {word}
   </span>
 ));
 
 AnimatedWord.displayName = 'AnimatedWord';
 
-// Benefits data moved outside component to prevent re-creation
-const BENEFITS_DATA: BenefitData[] = [
-  { title: "Expert Guidance", desc: "Get advice from mentors at Ivy League & top universities" },
-  { title: "Personalized Strategy", desc: "Develop a unique roadmap for your college applications" },
-  { title: "Application Review", desc: "Get feedback on your essays and overall application" },
-  { title: "Program Matching", desc: "Find the best universities for your unique profile" }
-];
+// Background elements component to reduce main component complexity
+const BackgroundElements = memo(() => (
+  <>
+    <div
+      className="absolute top-[15%] right-[-5%] w-3/5 h-2/5 bg-amber-300/20 rounded-full blur-3xl animate-pulse"
+      style={{ 
+        animationDuration: '15s',
+        willChange: 'opacity'
+      }}
+    />
+    <div
+      className="absolute top-[-30%] right-[20%] w-1/2 h-1/2 bg-amber-300/20 rounded-full blur-3xl animate-pulse"
+      style={{ 
+        animationDuration: '22s',
+        willChange: 'opacity'
+      }}
+    />
+    <div
+      className="absolute bottom-[15%] left-[-10%] w-3/4 h-2/4 bg-blue-300/20 rounded-full blur-3xl animate-pulse"
+      style={{ 
+        animationDuration: '22s',
+        willChange: 'opacity'
+      }}
+    />
+  </>
+));
 
-// Bottom words moved outside component
-const BOTTOM_WORDS: string[] = ['✦', 'start', 'your', 'journey', 'today', '✦'];
+BackgroundElements.displayName = 'BackgroundElements';
 
-// Floating icons data moved outside component
-const FLOATING_ICONS: FloatingIconData[] = [
-  { Icon: BookOpen, size: 60, className: "absolute top-1/4 left-[10%] animate-float-slow opacity-20 text-blue-600" },
-  { Icon: Star, size: 40, className: "absolute top-1/3 right-[15%] animate-float-medium opacity-20 text-amber-600" },
-  { Icon: Award, size: 50, className: "absolute bottom-1/4 left-[20%] animate-float opacity-20 text-blue-600" },
-  { Icon: BookMarked, size: 45, className: "absolute bottom-1/3 right-[20%] animate-float-slow opacity-20 text-amber-600" }
-];
+// Floating icons component to reduce main component complexity
+const FloatingIcons = memo(() => (
+  <>
+    {FLOATING_ICONS.map((icon, index) => (
+      <FloatingIcon
+        key={index}
+        Icon={icon.Icon}
+        size={icon.size}
+        className={icon.className}
+      />
+    ))}
+  </>
+));
+
+FloatingIcons.displayName = 'FloatingIcons';
 
 export function BookingPage() {
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [isVisible, setIsVisible] = useState<boolean>(false);
 
-  // Memoized viewport height setter
+  // Memoized viewport height setter with debouncing
   const setVh = useCallback(() => {
     const vh = window.innerHeight * 0.01;
     document.documentElement.style.setProperty('--vh', `${vh}px`);
   }, []);
 
+  // Debounced resize handler to reduce excessive calls
+  const debouncedSetVh = useMemo(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+    return () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(setVh, 100);
+    };
+  }, [setVh]);
+
   // Memoized mouse handlers
   const handleMouseEnter = useCallback(() => setIsHovered(true), []);
   const handleMouseLeave = useCallback(() => setIsHovered(false), []);
 
+  // Memoized styles to prevent recalculation
+  const contentStyle = useMemo<React.CSSProperties>(() => ({
+    opacity: isVisible ? 1 : 0,
+    transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
+    transition: 'opacity 0.8s ease, transform 0.8s ease',
+    willChange: isVisible ? 'auto' : 'opacity, transform'
+  }), [isVisible]);
+
+  const cardStyle = useMemo<React.CSSProperties>(() => ({
+    transform: isHovered ? 'scale(1.02)' : 'scale(1)',
+    transition: 'transform 0.3s ease',
+    willChange: 'transform'
+  }), [isHovered]);
+
+  const sectionStyle = useMemo<React.CSSProperties>(() => ({
+    minHeight: 'calc(var(--vh, 1vh) * 100)'
+  }), []);
+
   useEffect(() => {
     // Initialize viewport height
     setVh();
-    window.addEventListener('resize', setVh, { passive: true });
+    
+    // Use passive event listener for better performance
+    window.addEventListener('resize', debouncedSetVh, { passive: true });
 
-    // Optimize scroll event dispatch
-    const scrollTimer = setTimeout(() => {
-      window.dispatchEvent(new Event('scroll'));
-    }, 100);
-
-    // Ensure scrolling is enabled
-    document.body.style.overflow = 'auto';
-    document.documentElement.style.overflow = 'auto';
+    // Batch DOM operations
+    requestAnimationFrame(() => {
+      // Ensure scrolling is enabled
+      document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
+      
+      // Trigger scroll event after DOM is ready
+      setTimeout(() => {
+        window.dispatchEvent(new Event('scroll'));
+      }, 100);
+    });
     
     // Show component with slight delay for animation
     const visibilityTimer = setTimeout(() => setIsVisible(true), 100);
     
     return () => {
-      window.removeEventListener('resize', setVh);
-      clearTimeout(scrollTimer);
+      window.removeEventListener('resize', debouncedSetVh);
       clearTimeout(visibilityTimer);
     };
-  }, [setVh]);
+  }, [setVh, debouncedSetVh]);
 
   return (
     <>
       <section 
         className="py-20 px-6 bg-stone-100 w-full min-h-screen pt-20 relative overflow-hidden" 
-        style={{ minHeight: 'calc(var(--vh, 1vh) * 100)' }}
+        style={sectionStyle}
       >
-        {/* Background elements with will-change for GPU acceleration */}
-        <div
-          className="absolute top-[15%] right-[-5%] w-3/5 h-2/5 bg-amber-300/20 rounded-full blur-3xl animate-pulse"
-          style={{ 
-            animationDuration: '15s',
-            willChange: 'opacity'
-          }}
-        />
-        <div
-          className="absolute top-[-30%] right-[20%] w-1/2 h-1/2 bg-amber-300/20 rounded-full blur-3xl animate-pulse"
-          style={{ 
-            animationDuration: '22s',
-            willChange: 'opacity'
-          }}
-        />
-        <div
-          className="absolute bottom-[15%] left-[-10%] w-3/4 h-2/4 bg-blue-300/20 rounded-full blur-3xl animate-pulse"
-          style={{ 
-            animationDuration: '22s',
-            willChange: 'opacity'
-          }}
-        />
-
-        {/* Floating elements with GPU acceleration */}
-        {FLOATING_ICONS.map((icon, index) => (
-          <FloatingIcon
-            key={index}
-            Icon={icon.Icon}
-            size={icon.size}
-            className={icon.className}
-            style={{ willChange: 'transform' }}
-          />
-        ))}
+        <BackgroundElements />
+        <FloatingIcons />
 
         <br />
 
         {/* Content container with optimized transitions */}
         <div 
           className="relative z-10 w-full pb-12 px-4 max-w-5xl mx-auto"
-          style={{
-            opacity: isVisible ? 1 : 0,
-            transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'opacity 0.8s ease, transform 0.8s ease',
-            willChange: isVisible ? 'auto' : 'opacity, transform'
-          }}
+          style={contentStyle}
         >
           {/* Page title */}
           <div className="flex items-center justify-center mb-16">
@@ -219,14 +273,10 @@ export function BookingPage() {
             className="max-w-3xl mx-auto rounded-[48px] p-2.5 bg-gradient-to-br from-blue-100 via-blue-50 to-amber-50 backdrop-blur-sm shadow-lg"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
-            style={{
-              transform: isHovered ? 'scale(1.02)' : 'scale(1)',
-              transition: 'transform 0.3s ease',
-              willChange: 'transform'
-            }}
+            style={cardStyle}
           >
             <div className="relative bg-white rounded-[38px] p-8 md:p-12 shadow-xl border border-blue-200 overflow-hidden">
-              {/* Animated background glow effect */}
+              {/* Animated background glow effect - memoized */}
               <div className="absolute inset-0 opacity-40">
                 <div
                   className={`absolute w-1/2 h-1/2 bg-blue-100 rounded-full blur-3xl ${isHovered ? 'animate-pulse-fast' : 'animate-pulse'}`}
@@ -257,19 +307,20 @@ export function BookingPage() {
                   </p>
                 </div>
                 
-                {/* Tally Form */}
+                {/* Lazy-loaded Tally Form with suspense fallback */}
                 <div className="mt-8 p-6 rounded-3xl bg-blue-50 border border-blue-200">
-                  <TallyForm />
+                  <Suspense fallback={<FormSkeleton />}>
+                    <LazyTallyForm />
+                  </Suspense>
                 </div>
                 
-                {/* Benefits section */}
+                {/* Benefits section - memoized list */}
                 <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
                   {BENEFITS_DATA.map((item, index) => (
                     <BenefitItem
                       key={index}
                       title={item.title}
                       desc={item.desc}
-                      index={index}
                     />
                   ))}
                 </div>
@@ -287,10 +338,10 @@ export function BookingPage() {
             </div>
           </div>
           
-          {/* Bottom accent decoration */}
+          {/* Bottom accent decoration - memoized */}
           <div className="mt-16 w-full flex justify-center gap-2 text-sm">
             {BOTTOM_WORDS.map((word, index) => (
-              <AnimatedWord key={index} word={word} index={index} />
+              <AnimatedWord key={index} word={word} />
             ))}
           </div>
         </div>

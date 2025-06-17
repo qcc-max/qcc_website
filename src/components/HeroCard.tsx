@@ -185,40 +185,39 @@ const WorldMap = memo(({
 WorldMap.displayName = 'WorldMap';
 
 // Optimized StatsCard Component with reduced re-renders
+// Optimized StatsCard Component with reduced re-renders - Made smaller and more refined
 const StatsCard = memo(({ 
   studentCount = '500+', 
   countryCount = '15+',
 }: StatsCardProps) => {
   return (
     <motion.div
-      className="bg-white/90 backdrop-blur-lg rounded-xl shadow-xl border border-white/30 flex items-center gap-2 sm:gap-4 z-20 p-2 sm:p-4 w-fit mx-auto text-center"
+      className="bg-white/90 backdrop-blur-lg rounded-lg shadow-lg border border-white/30 flex items-center gap-3 z-20 px-3 py-2 w-fit mx-auto text-center"
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: 1, ease: [0.25, 0.1, 0.25, 1] }}
       whileHover={{ 
-        scale: 1.05,
-        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+        scale: 1.02,
+        boxShadow: "0 8px 25px -8px rgba(0, 0, 0, 0.15)",
         backgroundColor: "rgba(255, 255, 255, 0.95)"
       }}
     >
       <div className="flex flex-col items-center">
         <UsersIcon />
-        <span className="text-gray-800 font-bold text-sm sm:text-lg leading-none">{studentCount}</span>
-        <span className="text-gray-500 text-xs sm:text-sm leading-none mt-0.5 sm:mt-1">Students</span>
+        <span className="text-gray-800 font-semibold text-sm leading-tight">{studentCount}</span>
+        <span className="text-gray-500 text-xs leading-tight">Students</span>
       </div>
       
-      <div className="w-px h-8 sm:h-12 bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
+      <div className="w-px h-8 bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
       
       <div className="flex flex-col items-center">
         <GraduationCapIcon />
-        <span className="text-gray-800 font-bold text-sm sm:text-lg leading-none">{countryCount}</span>
-        <span className="text-gray-500 text-xs sm:text-sm leading-none mt-0.5 sm:mt-1">Countries</span>
+        <span className="text-gray-800 font-semibold text-sm leading-tight">{countryCount}</span>
+        <span className="text-gray-500 text-xs leading-tight">Countries</span>
       </div>
     </motion.div>
   );
 });
-
-StatsCard.displayName = 'StatsCard';
 
 // Optimized background animation component with reduced DOM nodes
 const BackgroundAccents = memo(() => {

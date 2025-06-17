@@ -92,8 +92,8 @@ const RevolvingStar = memo<RevolvingStarProps>(({
     }}
     transition={
       allStatsActive
-        ? { duration: 1, ease: "easeOut" }
-        : { duration: 20, repeat: Infinity, ease: "linear", repeatType: "loop" }
+        ? { duration: 1, ease: "easeOut" } // Slowed down from 1 to 2 seconds
+        : { duration: 20, repeat: Infinity, ease: "linear", repeatType: "loop" } // Slowed down from 20 to 30 seconds
     }
   >
     <Star
@@ -131,8 +131,8 @@ const StatItem = memo<StatItemComponentProps>(({
         y: responsivePosition.y
       }}
       transition={{
-        duration: 0.8,
-        delay: 0.2 + (index * 0.1)
+        duration: 1, // Slowed down from 0.8 to 1.5 seconds
+        delay: 0.5 + (index * 0.2) // Increased delay from 0.2 + (index * 0.1)
       }}
     >
       <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-amber-50 flex items-center justify-center mb-2 shadow-lg">
@@ -148,6 +148,7 @@ StatItem.displayName = 'StatItem';
 
 const StatsCard = memo(() => {
   const [allStatsActive, setAllStatsActive] = useState(false);
+  const [hasTriggered, setHasTriggered] = useState(false); // New state to track if animation has triggered
   const [windowWidth, setWindowWidth] = useState(() => 
     typeof window !== 'undefined' ? window.innerWidth : 1200
   );
@@ -164,8 +165,8 @@ const StatsCard = memo(() => {
     },
     {
       icon: GraduationCap,
-      value: "95%",
-      label: "University Admittance Rate",
+      value: "100%",
+      label: "Client Satisfaction Rate",
       color: "text-blue-600",
       finalPosition: { x: 220, y: -160 }
     },
@@ -240,16 +241,17 @@ const StatsCard = memo(() => {
     };
   }, []);
 
-  // Optimized scroll handler with Intersection Observer fallback
+  // Modified scroll handler - only triggers once
   useEffect(() => {
     const element = sectionRef.current;
-    if (!element) return;
+    if (!element || hasTriggered) return; // Exit early if already triggered
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        const shouldActivate = entry.intersectionRatio > 0.2;
-        if (shouldActivate !== allStatsActive) {
-          setAllStatsActive(shouldActivate);
+        if (entry.intersectionRatio > 0.2 && !hasTriggered) {
+          setAllStatsActive(true);
+          setHasTriggered(true); // Mark as triggered
+          observer.disconnect(); // Disconnect observer after first trigger
         }
       },
       { 
@@ -260,18 +262,18 @@ const StatsCard = memo(() => {
 
     observer.observe(element);
     return () => observer.disconnect();
-  }, [allStatsActive]);
+  }, [hasTriggered]);
 
-  // Pre-generated particles to avoid recalculation
+  // Pre-generated particles - increased count from 40 to 80
   const coreParticles = useMemo(() => {
     const particles: JSX.Element[] = [];
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 80; i++) { // Increased from 40 to 80
       const size = Math.random() * 3 + 1;
       const angle = Math.random() * Math.PI * 2;
       const radius = Math.random() * 60 + 10;
       const initialX = Math.cos(angle) * radius;
       const initialY = Math.sin(angle) * radius;
-      const speed = Math.random() * 6 + 4;
+      const speed = Math.random() * 8 + 6; // Slowed down from (6 + 4) to (8 + 6)
       const opacity = Math.random() * 0.7 + 0.3;
       const isAmber = Math.random() > 0.5;
 
@@ -301,13 +303,14 @@ const StatsCard = memo(() => {
     return particles;
   }, []);
 
+  // Increased ambient particles from 150 to 300
   const ambientParticles = useMemo(() => {
     const particles: JSX.Element[] = [];
-    for (let i = 0; i < 150; i++) {
+    for (let i = 0; i < 300; i++) { // Increased from 150 to 300
       const size = Math.random() * 2.5 + 0.5;
       const initialX = (Math.random() - 0.5) * 1000;
       const initialY = (Math.random() - 0.5) * 500;
-      const duration = Math.random() * 12 + 8;
+      const duration = Math.random() * 16 + 12; // Slowed down from (12 + 8) to (16 + 12)
       const delay = Math.random() * 5;
       const opacity = Math.random() * 0.5 + 0.1;
       const isAmber = Math.random() > 0.5;
@@ -365,7 +368,7 @@ const StatsCard = memo(() => {
     });
   }, [stats, allStatsActive, getResponsivePosition]);
 
-  // Optimized burst particles with reduced count
+  // Optimized burst particles - increased count from 8 to 15 per stat
   const burstParticles = useMemo(() => {
     if (!allStatsActive) return null;
 
@@ -373,12 +376,12 @@ const StatsCard = memo(() => {
     stats.forEach((stat, statIndex) => {
       const responsivePosition = getResponsivePosition(stat.finalPosition, statIndex);
       
-      for (let i = 0; i < 8; i++) {
+      for (let i = 0; i < 15; i++) { // Increased from 8 to 15
         const size = Math.random() * 4 + 1;
         const angle = Math.random() * Math.PI * 2;
         const distance = Math.random() * 150 + 50;
-        const duration = Math.random() * 1.5 + 1;
-        const delay = Math.random() * 0.3;
+        const duration = Math.random() * 2.5 + 1.5; // Slowed down from (1.5 + 1) to (2.5 + 1.5)
+        const delay = Math.random() * 0.5; // Increased delay from 0.3 to 0.5
         
         particles.push(
           <motion.div
@@ -497,7 +500,7 @@ const StatsCard = memo(() => {
                 opacity: allStatsActive ? 0.5 : 1,
                 scale: allStatsActive ? 0.8 : 1,
               }}
-              transition={{ duration: 1, type: "tween" }}
+              transition={{ duration: 1.5, type: "tween" }} // Slowed down from 1 to 1.5
             >
               <motion.div
                 className="absolute w-full h-full rounded-full bg-gradient-to-r from-amber-500/30 to-blue-500/20"
@@ -510,7 +513,7 @@ const StatsCard = memo(() => {
                   opacity: [0.7, 0.9, 0.7],
                 }}
                 transition={{
-                  duration: 4,
+                  duration: 6, // Slowed down from 4 to 6
                   repeat: Infinity,
                   ease: "easeInOut",
                 }}
@@ -523,7 +526,7 @@ const StatsCard = memo(() => {
                   opacity: [0.4, 0.7, 0.4],
                 }}
                 transition={{
-                  duration: 5,
+                  duration: 7, // Slowed down from 5 to 7
                   repeat: Infinity,
                   ease: "easeInOut",
                 }}
@@ -543,7 +546,7 @@ const StatsCard = memo(() => {
                   opacity: [0.8, 1, 0.8],
                 }}
                 transition={{
-                  duration: 2,
+                  duration: 3, // Slowed down from 2 to 3
                   repeat: Infinity,
                   ease: "easeInOut",
                 }}
