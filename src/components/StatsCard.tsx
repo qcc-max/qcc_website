@@ -99,7 +99,7 @@ const RevolvingStar = memo<RevolvingStarProps>(({
     }}
     transition={
       allStatsActive
-        ? { duration: 1, ease: "easeOut" }
+        ? { duration: 0.8, ease: "easeOut" }
         : { duration: 20, repeat: Infinity, ease: "linear", repeatType: "loop" }
     }
   >
@@ -144,8 +144,8 @@ const StatItemComponent = memo<StatItemComponentProps>(({
         y: responsivePosition.y
       }}
       transition={{
-        duration: 1,
-        delay: 0.5 + (index * 0.2)
+        duration: 0.7,
+        delay: 0.2 + (index * 0.1)
       }}
     >
       <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-amber-50 flex items-center justify-center mb-2 shadow-lg">
@@ -284,7 +284,7 @@ const StatsCard = memo(() => {
         }
       },
       { 
-        threshold: 0.2, // Simplified threshold
+        threshold: 0.4, // Simplified threshold
         rootMargin: '0px 0px -20% 0px'
       }
     );
