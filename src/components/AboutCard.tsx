@@ -234,7 +234,7 @@ export const AboutCard = memo(() => {
                     
                     <p className="text-lg md:text-xl leading-relaxed text-gray-700 font-light mt-6">
                       From personal statements to scholarship essays, we have helped students gain admission to 
-                      universities like Harvard, Stanford, the University of Toronto, NYU Abu Dhabi, KAIST, and more. 
+                      universities like Carleton College, University of Miami, Imperial College London, University of Toronto, Minerva, KAIST, and more. 
                       Our team offers real experience and effective strategies, supported by a global network of mentors, 
                       alumni, and former admissions officers who understand what it takes to succeed.
                     </p>
