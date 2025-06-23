@@ -176,7 +176,7 @@ const StatsCard = memo(() => {
   const stats = useMemo<StatItem[]>(() => [
     {
       icon: Award,
-      value: "$10M+",
+      value: "$5M+",
       label: "Scholarships Awarded",
       color: "text-amber-600",
       finalPosition: { x: -220, y: -160 }
