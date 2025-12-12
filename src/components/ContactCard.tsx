@@ -49,8 +49,8 @@ export const ContactCard = () => {
    },
    {
      icon: <Phone className="w-5 h-5" />,
-     text: "+92 306 6633330",
-     href: "tel:+923028082222",
+     text: "+1 (647) 267-1174",
+     href: "tel:+16472671174",
      color: "text-blue-600",
      bgColor: "bg-blue-100",
      hoverColor: "group-hover:text-blue-700",

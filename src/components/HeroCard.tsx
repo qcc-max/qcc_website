@@ -435,7 +435,7 @@ export const HeroCard = memo(() => {
 
             {shouldLoadMap && (
               <StatsCard 
-                studentCount="500+" 
+                studentCount="2000+" 
                 countryCount="15+" 
               />
             )}
