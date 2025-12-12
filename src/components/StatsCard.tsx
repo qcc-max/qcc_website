@@ -190,7 +190,7 @@ const StatsCard = memo(() => {
     },
     {
       icon: Users,
-      value: "500+",
+      value: "2000+",
       label: "Students Mentored",
       color: "text-amber-600",
       finalPosition: { x: -300, y: 0 }

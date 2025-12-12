@@ -10,7 +10,7 @@ const LazyTallyForm = lazy(() => {
         default: memo(() => (
           <div className="mt-6">
             <iframe
-              src="https://tally.so/r/wbAE97"
+              src="https://tally.so/r/3Xp0Yj"
               width="100%"
               height="738"
               title="Consultation Request Form"

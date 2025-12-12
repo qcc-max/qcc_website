@@ -39,10 +39,10 @@ const TESTIMONIALS_DATA: Testimonial[] = [
   {
     quote: "I came in with big goals but wasn't sure how to bring everything together. QCC helped me craft essays that truly reflected who I am — from research to extracurriculars. Their feedback was always thoughtful and sharp, and their support kept me grounded through the most stressful parts of the process. They also constantly kept me updated about scholarship opportunities around the world, which helped me stay ahead and focused.",
     name: "Maaz Habib",
-    designation: "University College London",
+    designation: "Minerva University",
     src: "/maaz.webp",
     gradient: "from-blue-400/20 to-amber-500/20",
-    instagramUrl: "https://www.instagram.com/p/DKRinexI8Db/?utm_source=ig_web_copy_link&igsh=bHdkaDZpd3ZteWt1"
+    instagramUrl: "https://www.instagram.com/p/DPIqN9njhAF/?igsh=MmFmeHI3ZGRoNjBy"
   },
   {
     quote: "I joined late and didn't really know how to bring my ideas together. QCC made space for what mattered to me and still helped me build essays that were sharp and meaningful. Their feedback made everything clearer, and I wouldn't have gotten here without them.",
@@ -79,7 +79,7 @@ const TESTIMONIALS_DATA: Testimonial[] = [
   {
     quote: "I came in with stories from startups, trading, and tech but didn't know how to put them together. QCC helped me build a clear strategy and made sure my essays actually sounded like me. Their feedback made the whole process simple and real.",
     name: "Muhammad Hassnain Khan",
-    designation: "Minerva University",
+    designation: "Beloit College",
     src: "/hasnain.webp",
     gradient: "from-blue-600/20 to-amber-600/20",
     instagramUrl: "https://www.instagram.com/p/DJUpff6AROc/?utm_source=ig_web_copy_link&igsh=ZjBtdzRwNmdvczFi"

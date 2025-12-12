@@ -12,9 +12,10 @@ import { Button } from './ui/button';
 interface NavItem {
   label: string;
   id: string;
+  isRoute?: boolean; // Flag to identify route-based navigation
 }
 
-// Memoized nav items to prevent recreation on every render
+// Updated nav items to include Resources page
 const NAV_ITEMS: NavItem[] = [
   { label: 'Home', id: 'home' },
   { label: 'Impact', id: 'impact' },
@@ -22,6 +23,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Services', id: 'services' },
   { label: 'Testimonials', id: 'testimonials' },
   { label: 'Contact', id: 'contact' },
+  { label: 'Resources', id: 'resources', isRoute: true } // New Resources page
 ];
 
 // Throttle utility for scroll events
@@ -57,6 +59,26 @@ export const Navbar = () => {
     location.pathname === '/' || location.pathname === '/home', 
     [location.pathname]
   );
+
+  // Check if we're on the Resources page
+  const isResourcesPage = useMemo(() => 
+    location.pathname === '/resources', 
+    [location.pathname]
+  );
+
+  // Check if we're on the Booking page
+  const isBookingPage = useMemo(() => 
+    location.pathname === '/book', 
+    [location.pathname]
+  );
+
+  // Determine current active page for navigation highlighting
+  const currentActivePage = useMemo(() => {
+    if (isResourcesPage) return 'resources';
+    if (isBookingPage) return 'book';
+    if (isHomePage) return activeSection;
+    return '';
+  }, [isResourcesPage, isBookingPage, isHomePage, activeSection]);
 
   // Memoize scroll handler with throttling
   const handleScrollForBackground = useCallback(
@@ -122,15 +144,20 @@ export const Navbar = () => {
     };
   }, [isHomePage, handleSectionTracking]);
 
-  // Memoize navigation handler
-  const navigateToSection = useCallback((id: string) => {
-    if (isHomePage) {
-      const element = document.getElementById(id);
+  // Updated navigation handler to support both sections and routes
+  const navigateToSection = useCallback((item: NavItem) => {
+    if (item.isRoute) {
+      // Navigate to dedicated page routes
+      navigate(`/${item.id}`);
+    } else if (isHomePage) {
+      // Scroll to section on home page
+      const element = document.getElementById(item.id);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth' });
       }
     } else {
-      navigate(`/#${id}`);
+      // Navigate to home page with hash
+      navigate(`/#${item.id}`);
     }
     setIsMobileMenuOpen(false);
   }, [isHomePage, navigate]);
@@ -169,6 +196,14 @@ export const Navbar = () => {
     navigate('/book');
     setIsMobileMenuOpen(false);
   }, [navigate]);
+
+  // Check if a nav item is active
+  const isNavItemActive = useCallback((item: NavItem) => {
+    if (item.isRoute) {
+      return location.pathname === `/${item.id}`;
+    }
+    return isHomePage && activeSection === item.id;
+  }, [location.pathname, isHomePage, activeSection]);
 
   // Memoize class names to prevent recalculation
   const headerClassName = useMemo(() => 
@@ -225,18 +260,18 @@ export const Navbar = () => {
                   <NavigationMenuItem key={item.id}>
                     <NavigationMenuLink
                       className={`relative flex justify-center px-2 md:px-3 lg:px-5 py-2 mx-0.5 cursor-pointer transition-all duration-300 rounded-full group text-xs sm:text-sm
-                        ${(isHomePage && activeSection === item.id)
+                        ${isNavItemActive(item)
                           ? 'text-amber-600 bg-amber-50'
                           : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'}`}
-                      onClick={() => navigateToSection(item.id)}
-                      onKeyDown={(e) => e.key === 'Enter' && navigateToSection(item.id)}
+                      onClick={() => navigateToSection(item)}
+                      onKeyDown={(e) => e.key === 'Enter' && navigateToSection(item)}
                     >
                       <div className="font-medium leading-none">
                         {item.label}
                       </div>
                       {/* Highlight effect on hover */}
                       <span className={`absolute inset-0 rounded-full opacity-0 group-hover:opacity-30 transition-opacity duration-300 ${
-                        (isHomePage && activeSection === item.id) ? 'bg-amber-100' : 'bg-blue-100'
+                        isNavItemActive(item) ? 'bg-amber-100' : 'bg-blue-100'
                       }`}></span>
                     </NavigationMenuLink>
                   </NavigationMenuItem>
@@ -259,7 +294,9 @@ export const Navbar = () => {
           {/* CTA Button - Only visible on tablet and larger screens */}
           <Button
             onClick={handleBookClick}
-            className="hidden md:flex h-8 sm:h-9 px-3 sm:px-4 md:px-5 bg-gradient-to-br from-blue-500 to-blue-600 hover:shadow-lg hover:shadow-blue-200/50 hover:-translate-y-1 transition-all duration-300 rounded-full text-white text-xs sm:text-sm font-medium"
+            className={`hidden md:flex h-8 sm:h-9 px-3 sm:px-4 md:px-5 bg-gradient-to-br from-blue-500 to-blue-600 hover:shadow-lg hover:shadow-blue-200/50 hover:-translate-y-1 transition-all duration-300 rounded-full text-white text-xs sm:text-sm font-medium ${
+              isBookingPage ? 'ring-2 ring-amber-300' : ''
+            }`}
           >
             Book Free Meeting
           </Button>
@@ -309,9 +346,9 @@ export const Navbar = () => {
                 {NAV_ITEMS.map((item, index) => (
                   <div key={item.id} className="mb-1.5 last:mb-0">
                     <button
-                      onClick={() => navigateToSection(item.id)}
+                      onClick={() => navigateToSection(item)}
                       className={`py-3 sm:py-4 text-center text-lg sm:text-xl w-full rounded-xl transition-all duration-300 transform
-                        ${(isHomePage && activeSection === item.id)
+                        ${isNavItemActive(item)
                           ? 'text-amber-600 font-medium bg-amber-50'
                           : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
                         }`}
@@ -321,7 +358,7 @@ export const Navbar = () => {
                       }}
                     >
                       {item.label}
-                      {(isHomePage && activeSection === item.id) && (
+                      {isNavItemActive(item) && (
                         <span className="ml-2 text-xs inline-block">✦</span>
                       )}
                     </button>
@@ -335,7 +372,9 @@ export const Navbar = () => {
           <div className="p-4 sm:p-6 border-t border-blue-100 bg-stone-100 relative z-10">
             <Button
               onClick={handleBookClick}
-              className="w-full h-12 sm:h-14 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full text-base sm:text-lg font-medium transform transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-200/50"
+              className={`w-full h-12 sm:h-14 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full text-base sm:text-lg font-medium transform transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-200/50 ${
+                isBookingPage ? 'ring-2 ring-amber-300' : ''
+              }`}
             >
               Book Free Meeting
             </Button>
